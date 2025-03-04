@@ -70,6 +70,28 @@ const appStyles = StyleSheet.create({
     width: "10%",
     alignItems: "center",
   },
+
+  accountButtons: {
+    backgroundColor: "#00A86B",
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 8,
+    marginTop: 30,
+    marginBottom: 15,
+    width: "16%",
+    alignItems: "center",
+  },
+
+  deleteAccountButton: {
+    backgroundColor: "#FF0000",
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    borderRadius: 8,
+    marginTop: 30,
+    marginBottom: 15,
+    width: "16%",
+    alignItems: "center",
+  }, 
   secondaryButton: {
     backgroundColor: "#444",
   },
