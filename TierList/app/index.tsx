@@ -2,7 +2,7 @@ import { Text, View, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import appStyles from "./styles/appStyles.js";
 
-export default function LandingScreen() {
+export default function WelcomeScreen() {
   const router = useRouter();
   
   return (

@@ -63,6 +63,11 @@ export default function SignUpScreen() {
             <Text style={appStyles.buttonText}>LOG IN</Text>
             </TouchableOpacity>
 
+            {/* send user to login page if user already has an account */}
+            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/")}>
+            <Text style={appStyles.buttonText}>BACK</Text>
+            </TouchableOpacity>
+
         </View>
     );
 }
