@@ -16,8 +16,14 @@ export default function LandingScreen() {
                     <Text style={appStyles.buttonText}>ACCOUNT</Text>
                 </TouchableOpacity>
 
-                {/* Show active tier list and past tier list */}
+                {/* Show current active tier list */}
                 {/* open a modal */}
+
+                {/* Tier List Page */}
+                <TouchableOpacity style={appStyles.createAccountButton}onPress={() => router.push("/TierList")}>
+                    <Text style={appStyles.buttonText}>TIER LIST PAGE</Text>
+
+                </TouchableOpacity>
 
                 {/* View all lists */}
                 <TouchableOpacity style={appStyles.createAccountButton}>
