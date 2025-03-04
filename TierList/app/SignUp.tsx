@@ -52,7 +52,7 @@ export default function SignUpScreen() {
             />
 
             {/* send user entered credentials */}
-            <TouchableOpacity style={appStyles.signUpButton}>
+            <TouchableOpacity style={appStyles.signUpButton} onPress={() => router.push("/Landing")}>
                 <Text style={appStyles.buttonText}>REGISTER</Text>
             </TouchableOpacity>
 
