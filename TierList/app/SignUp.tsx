@@ -52,7 +52,7 @@ export default function SignUpScreen() {
             />
 
             {/* send user entered credentials */}
-            <TouchableOpacity style={appStyles.signUpButton}>
+            <TouchableOpacity style={appStyles.signUpButton} onPress={() => router.push("/Landing")}>
                 <Text style={appStyles.buttonText}>REGISTER</Text>
             </TouchableOpacity>
 
@@ -61,6 +61,11 @@ export default function SignUpScreen() {
             <Text style={appStyles.smallText}>Already a user?</Text>
             <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]}>
             <Text style={appStyles.buttonText}>LOG IN</Text>
+            </TouchableOpacity>
+
+            {/* send user to login page if user already has an account */}
+            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/")}>
+            <Text style={appStyles.buttonText}>BACK</Text>
             </TouchableOpacity>
 
         </View>
