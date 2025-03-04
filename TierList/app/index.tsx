@@ -16,7 +16,7 @@ export default function LandingScreen() {
       </TouchableOpacity>
 
       {/* Navigate to Login */}
-      <TouchableOpacity style={[appStyles.createAccountButton, appStyles.loginButton] } onPress={() => router.push("/Login")}>
+      <TouchableOpacity style={[appStyles.createAccountButton, appStyles.loginButton]}>
         <Text style={appStyles.buttonText}>Log In</Text>
       </TouchableOpacity>
 
