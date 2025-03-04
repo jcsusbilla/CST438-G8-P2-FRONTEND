@@ -1,7 +1,7 @@
 import { Text, View, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
-export default function LandingScreen() {
+export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
