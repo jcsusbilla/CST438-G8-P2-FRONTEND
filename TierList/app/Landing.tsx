@@ -17,20 +17,22 @@ export default function LandingScreen() {
                 </TouchableOpacity>
 
                 {/* Show active tier list and past tier list */}
-
+                {/* open a modal */}
 
                 {/* View all lists */}
                 <TouchableOpacity style={appStyles.createAccountButton}>
                     <Text style={appStyles.buttonText}>ALL LISTS</Text>
+                    {/* open modal or new page? */}
                 </TouchableOpacity>
 
                 {/* View public lists */}
                 <TouchableOpacity style={appStyles.createAccountButton}>
                     <Text style={appStyles.buttonText}>PUBLIC LISTS</Text>
+                    {/* open modal or new page? */}
                 </TouchableOpacity>
 
                 {/* Logout button */}
-                <TouchableOpacity style={[appStyles.createAccountButton, appStyles.loginButton]}>
+                <TouchableOpacity style={[appStyles.createAccountButton, appStyles.loginButton]} onPress={() => router.push("/")}>
                     <Text style={appStyles.buttonText}>LOGOUT</Text>
                 </TouchableOpacity>
         </View>
