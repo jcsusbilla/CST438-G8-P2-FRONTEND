@@ -15,7 +15,7 @@ export default function TierListScreen() {
 
             <Text style={appStyles.title}>Past Tier Lists</Text>
 
-            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/")}>
+            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/Landing")}>
             <Text style={appStyles.buttonText}>BACK</Text>
             </TouchableOpacity>
         </View>

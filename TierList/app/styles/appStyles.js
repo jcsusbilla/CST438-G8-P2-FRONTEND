@@ -5,14 +5,14 @@ const appStyles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#25292e",
+    backgroundColor: "#f5f5f5",
     padding: 20,
     paddingTop: 80,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#000000",
     marginBottom: 30,
   },
   createAccountButton: {
@@ -46,7 +46,8 @@ const appStyles = StyleSheet.create({
   },
   smallText: {
     fontSize: 14,
-    color: "#ffffff",
+    color: "#000000",
+    fontWeight: "bold",
     marginTop: 20,
     textAlign: "center",
   },

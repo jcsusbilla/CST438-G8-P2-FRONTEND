@@ -25,7 +25,7 @@ export default function LoginScreen() {
                 secureTextEntry={true}
             />
 
-            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]}>
+            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/Landing")}>
                 <Text style={appStyles.buttonText}>LOG IN</Text>
             </TouchableOpacity>
             

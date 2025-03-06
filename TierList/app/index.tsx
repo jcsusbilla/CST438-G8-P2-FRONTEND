@@ -1,5 +1,6 @@
 import { Text, View, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import appStyles from "./styles/appStyles.js";
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -11,12 +12,12 @@ export default function WelcomeScreen() {
       
       <View style={styles.buttonContainer}>
         {/* Navigate to Login */}
-        <TouchableOpacity style={styles.button} onPress={() => alert("Login Clicked") }>
+        <TouchableOpacity style={styles.button} onPress={() => router.push("/Login")}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
         
         {/* Navigate to Sign Up */}
-        <TouchableOpacity style={[styles.button, styles.signupButton]} onPress={() => alert("Sign up Clicked") }>
+        <TouchableOpacity style={[styles.button, styles.signupButton]} onPress={() => router.push("/SignUp")}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </View>

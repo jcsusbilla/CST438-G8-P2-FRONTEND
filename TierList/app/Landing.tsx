@@ -10,7 +10,7 @@ export default function LandingScreen() {
     
     return (
         <View style={appStyles.container}>
-            <Text style={appStyles.title}>Hello, username</Text>\
+            <Text style={appStyles.title}>Hello, username</Text>
                 {/* Modify Account Button */}
                 <TouchableOpacity style={appStyles.createAccountButton} onPress={() => router.push("/Account")}>
                     <Text style={appStyles.buttonText}>ACCOUNT</Text>

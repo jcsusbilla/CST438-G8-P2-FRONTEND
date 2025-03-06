@@ -59,7 +59,7 @@ export default function SignUpScreen() {
 
             {/* send user to login page if user already has an account */}
             <Text style={appStyles.smallText}>Already a user?</Text>
-            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]}>
+            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/Login")}>
                 <Text style={appStyles.buttonText}>LOG IN</Text>
             </TouchableOpacity>
 
