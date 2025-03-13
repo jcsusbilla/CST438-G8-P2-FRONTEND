@@ -1,65 +1,54 @@
-import React from "react";
-import { useState } from 'react';
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Text, View, TouchableOpacity, TextInput} from "react-native";
+import React, { useState, useEffect } from "react";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Text, View, TouchableOpacity, Alert } from "react-native";
 import appStyles from "./styles/appStyles.js";
-import API_URL from "@/api/apiConfig";
-
+import { logoutUser, fetchUserDetails } from "@/api/userApi";
 
 export default function LandingScreen() {
     const router = useRouter();
-    const { username, firstName, lastName, email } = useLocalSearchParams();
-    
-    // LOGOUT FUNCTION
-    const handleLogout = async () => {
-        try {
-            const response = await fetch(`${API_URL}/logout`, {
-                method: 'GET',
-                credentials: 'include'                                                      // important to pass session cookie
-            });
-    
-            if (response.ok) {
-                alert('Logged out successfully!');
-                router.push('/');
-            } else {
-                alert('Logout failed.');
+    const { email } = useLocalSearchParams();
+    const emailStr = Array.isArray(email) ? email[0] : email || "";                                                     // make sure email is a string
+    const [user, setUser] = useState<{ username: string, firstName: string, lastName: string } | null>(null);
+
+    useEffect(() => {
+        const getUserData = async () => {
+            try {
+                if (!emailStr) return;                                                                                  // prevents API call if email is empty
+                const userData = await fetchUserDetails(emailStr);
+                setUser(userData);
+            } catch (error) {
+                Alert.alert("Error", "Failed to load user details.");
             }
-        } catch (error) {
-            alert('Logout error');
-        }
-    };
+        };
+
+        getUserData();
+    }, [emailStr]);
 
     return (
         <View style={appStyles.container}>
-            <Text style={appStyles.title}>Hello, {`${firstName} ${lastName}`}</Text>
-            {/* Modify Account Button */}
+            {/* only display greeting if user data is available */}
+            {user && (
+                <Text style={appStyles.title}>
+                    Hello, {user.firstName} {user.lastName}
+                </Text>
+            )}
+
             <TouchableOpacity style={appStyles.createAccountButton} onPress={() => router.push("/Account")}>
                 <Text style={appStyles.buttonText}>ACCOUNT</Text>
             </TouchableOpacity>
 
-            {/* Show current active tier list */}
-            {/* open a modal */}
-
-            {/* Tier List Page */}
-            <TouchableOpacity style={appStyles.createAccountButton}onPress={() => router.push("/TierList")}>
+            <TouchableOpacity style={appStyles.createAccountButton} onPress={() => router.push("/TierList")}>
                 <Text style={appStyles.buttonText}>TIER LIST PAGE</Text>
-
             </TouchableOpacity>
 
-            {/* View all lists */}
-            <TouchableOpacity style={appStyles.createAccountButton}>
-                <Text style={appStyles.buttonText}>ALL LISTS</Text>
-                {/* open modal or new page? */}
-            </TouchableOpacity>
-
-            {/* View public lists */}
-            <TouchableOpacity style={appStyles.createAccountButton}>
-                <Text style={appStyles.buttonText}>PUBLIC LISTS</Text>
-                {/* open modal or new page? */}
-            </TouchableOpacity>
-
-            {/* Logout button */}
-            <TouchableOpacity style={[appStyles.createAccountButton, appStyles.loginButton]} onPress={() => router.push("/")}>
+            <TouchableOpacity style={appStyles.createAccountButton} onPress={async () => {
+                try {
+                    await logoutUser();
+                    router.push('/');
+                } catch (error) {
+                    Alert.alert("Logout error");
+                }
+            }}>
                 <Text style={appStyles.buttonText}>LOGOUT</Text>
             </TouchableOpacity>
         </View>
