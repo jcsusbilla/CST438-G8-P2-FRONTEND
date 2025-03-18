@@ -1,36 +1,59 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text, View, TouchableOpacity, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { logoutUser, fetchUserDetails } from "@/api/userApi"; // Ensure this is imported
 import appStyles from "./styles/appStyles.js";
-import { logoutUser, fetchUserDetails } from "@/api/userApi";
 
 export default function LandingScreen() {
     const router = useRouter();
     const { email } = useLocalSearchParams();
-    const emailStr = Array.isArray(email) ? email[0] : email || "";                                                     // make sure email is a string
     const [user, setUser] = useState<{ username: string, firstName: string, lastName: string } | null>(null);
+    const [emailStr, setEmailStr] = useState("");
 
     useEffect(() => {
-        const getUserData = async () => {
+        const loadEmail = async () => {
             try {
-                if (!emailStr) return;                                                                                  // prevents API call if email is empty
-                const userData = await fetchUserDetails(emailStr);
-                setUser(userData);
-            } catch (error) {
-                Alert.alert("Error", "Failed to load user details.");
+                const storedEmail = email ? email.toString() : await AsyncStorage.getItem("userEmail");
+                console.log("Loaded email from storage:", storedEmail);
+    
+                if (storedEmail) {
+                    setEmailStr(storedEmail);
+                    getUserData(storedEmail);
+                } else {
+                    console.log("No email found, redirecting to login.");
+                    router.replace("/Login");
+                }
+            } catch (err) {
+                console.error("Error loading email:", err);
+                router.replace("/Login");
             }
         };
+    
+        loadEmail();
+    }, []);
 
-        getUserData();
-    }, [emailStr]);
+    // **Define getUserData function**
+    const getUserData = async (emailToFetch: string) => {
+        try {
+            console.log("Fetching user data for:", emailToFetch);
+            const userData = await fetchUserDetails(emailToFetch); // Ensure this function exists in userApi.ts
+            console.log("Fetched user data:", userData);
+            setUser(userData);
+        } catch (error) {
+            console.error("Failed to fetch user details:", error);
+            Alert.alert("Error", "Failed to load user details.");
+        }
+    };
 
     return (
         <View style={appStyles.container}>
-            {/* only display greeting if user data is available */}
-            {user && (
+            {user ? (
                 <Text style={appStyles.title}>
                     Hello, {user.firstName} {user.lastName}
                 </Text>
+            ) : (
+                <Text>Loading user details...</Text>
             )}
 
             <TouchableOpacity style={appStyles.createAccountButton} onPress={() => router.push("/Account")}>
@@ -41,15 +64,14 @@ export default function LandingScreen() {
                 <Text style={appStyles.buttonText}>TIER LIST PAGE</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={appStyles.createAccountButton} onPress={async () => {
-                try {
-                    await logoutUser();
-                    router.push('/');
-                } catch (error) {
-                    Alert.alert("Logout error");
-                }
-            }}>
-                <Text style={appStyles.buttonText}>LOGOUT</Text>
+            <TouchableOpacity
+                style={appStyles.button}
+                onPress={async () => {
+                    await AsyncStorage.removeItem("userEmail"); // Clear user data
+                    router.replace("/Login");
+                }}
+            >
+                <Text style={appStyles.buttonText}>LOG OUT</Text>
             </TouchableOpacity>
         </View>
     );

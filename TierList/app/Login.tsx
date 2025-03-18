@@ -4,18 +4,20 @@ import { Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
 import * as Google from "expo-auth-session/providers/google";
 import appStyles from "./styles/appStyles.js";
 import { loginUser, loginWithGoogle } from "@/api/userApi";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    //const message = await loginUser(email, password);
 
-    // configure the google oauth
+    // Google OAuth Request
     const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: "YOUR_GOOGLE_CLIENT_ID" 
+        clientId: "YOUR_GOOGLE_CLIENT_ID"
     });
 
-    // handle google oauth response
     useEffect(() => {
         if (response?.type === "success") {
             const { authentication } = response;
@@ -27,26 +29,37 @@ export default function LoginScreen() {
         if (!token) return;
 
         try {
+            setLoading(true);
             const message = await loginWithGoogle(token);
             Alert.alert("Success", message);
             router.push("/Landing");
         } catch (err: any) {
             Alert.alert("Google Login Failed.", err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert("Error", "Please fill in both fields");
+            Alert.alert("Error", "Please fill in both fields.");
             return;
         }
-
+    
         try {
-            const message = await loginUser(email, password);
-            Alert.alert("Success", message);
-            router.push("/Landing");
-        } catch (err: any) {
-            Alert.alert("Login Failed.", err.message);
+            const response = await loginUser(email, password);
+            console.log("Login API Response:", response);
+    
+            if (response && response.message === "Login successful") {
+                await AsyncStorage.setItem("userEmail", email);
+                console.log("Navigating to Landing...");
+                router.replace("/Landing");
+            } else {
+                Alert.alert("Login Failed", response.message || "Unexpected error.");
+            }
+        } catch (err) {
+            console.error("Login error:", err);
+            Alert.alert("Login Failed", "An error occurred. Please try again.");
         }
     };
 
@@ -68,11 +81,14 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
             />
 
-            <TouchableOpacity style={appStyles.button} onPress={handleLogin}>
-                <Text style={appStyles.buttonText}>LOG IN</Text>
+            <TouchableOpacity style={appStyles.button} onPress={handleLogin} disabled={loading}>
+                <Text style={appStyles.buttonText}>{loading ? "LOGGING IN..." : "LOG IN"}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={appStyles.button} onPress={() => promptAsync()}>
+            <TouchableOpacity 
+                style={appStyles.button} 
+                onPress={() => request ? promptAsync() : Alert.alert("Error", "Google Login request not initialized.")}
+            >
                 <Text style={appStyles.buttonText}>LOGIN WITH GOOGLE</Text>
             </TouchableOpacity>
 
