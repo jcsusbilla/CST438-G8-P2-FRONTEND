@@ -1,50 +1,62 @@
 import { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, TextInput, Button, StyleSheet } from "react-native";
 
 export default function TierListScreen() {
-  const [activeTierList] = useState({
-    S: ["Item 1", "Item 2"],
-    A: ["Item 3", "Item 4"],
-    B: ["Item 5"],
-    C: ["Item 6"],
-    D: ["Item 7"],
-    F: ["Item 8"],
+  var [tierListTitle, setTierListTitle] = useState("Enter Tier List Title");
+  const [activeTierList, setActiveTierList] = useState<{
+    [key: string]: string[];
+  }>({
+    S: [],
+    A: [],
+    B: [],
+    C: [],
+    D: [],
+    F: [],
   });
 
-  const [pastLists] = useState([
-    { id: 1, name: "Example 0", tiers: { S: ["Item A", "Item B"], A: ["Item C"] } },
-    { id: 2, name: "Example 1", tiers: { S: ["X"], A: ["Y", "Z"] } },
-  ]);
+  const handleAddItem = (tier: string, text: string) => {
+    if (text.trim()) {
+      setActiveTierList((prev) => ({
+        ...prev,
+        [tier]: [...prev[tier], text.trim()],
+      }));
+    }
+  };
+
+  const handleSaveTierList = () => {
+    // log the data to the console.
+    console.log("Saving Tier List:", { tierListTitle, activeTierList });
+  };
 
   return (
-    <View style={[styles.container, { flexDirection: "row", justifyContent: "space-between" }]}>
+    <View style={styles.container}>
       {/* Active Tier List */}
-      <View style={styles.card}>
-        <Text style={styles.title}>Active Tier List</Text>
+      <View style={styles.cardLarge}>
+        <TextInput
+          style={styles.titleInput}
+          value={tierListTitle}
+          onChangeText={setTierListTitle}
+          placeholder="Enter Tier List Title"
+        />
         {Object.entries(activeTierList).map(([tier, items]) => (
-          <Text key={tier} style={styles.cardText}>
-            <Text style={styles.bold}>{tier}:</Text> {items.join(", ")}
-          </Text>
-        ))}
-      </View>
-
-      {/* Past Tier Lists */}
-      <View style={styles.card}>
-        <Text style={styles.title}>Past Tier Lists</Text>
-        {pastLists.map((list) => (
-          <View key={list.id} style={styles.pastListContainer}>
-            <Text style={styles.cardTitle}>{list.name}</Text>
-            {Object.entries(list.tiers).map(([tier, items]) => (
-              <Text key={tier} style={styles.cardText}>
-                <Text style={styles.bold}>{tier}:</Text> {items.join(", ")}
-              </Text>
-            ))}
+          <View key={tier} style={styles.tierContainerLarge}>
+            <Text style={styles.bold}>{tier}:</Text>
+            <Text style={styles.tierItem}>{items.join(", ")}</Text>
+            <TextInput
+              style={styles.smallInput}
+              placeholder={`Add to ${tier} tier`}
+              onSubmitEditing={(event) => handleAddItem(tier, event.nativeEvent.text)}
+            />
           </View>
         ))}
       </View>
+
+      {/* Save Button */}
+      <Button title="Save Tier List" onPress={handleSaveTierList} />
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -52,40 +64,47 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f5f5f5",
   },
-  card: {
-    flex: 1,
+  cardLarge: {
     backgroundColor: "#fff",
-    padding: 15,
+    padding: 20,
     borderRadius: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 6,
+    elevation: 5,
+    flex: 1.5,
   },
-  title: {
-    fontSize: 20,
+  titleInput: {
+    fontSize: 24,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 10,
+    marginBottom: 15,
+    borderBottomWidth: 1,
+    paddingBottom: 5,
   },
-  cardText: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 5,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#222",
-    marginBottom: 5,
+  tierContainerLarge: {
+    marginBottom: 15,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#e0e0e0",
   },
   bold: {
     fontWeight: "bold",
+    fontSize: 18,
   },
-  pastListContainer: {
-    marginTop: 10,
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: "#f0f0f0",
+  tierItem: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 5,
+  },
+  smallInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 5,
+    marginTop: 5,
+    borderRadius: 5,
+    width: "100%",
+    alignSelf: "flex-start",
   },
 });
