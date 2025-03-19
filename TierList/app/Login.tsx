@@ -11,11 +11,11 @@ export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    //const message = await loginUser(email, password);
 
     // Google OAuth Request
     const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: "YOUR_GOOGLE_CLIENT_ID"
+        clientId: "653433989841-i9tjusnnltg34encolsimput0t0nndof.apps.googleusercontent.com",
+        redirectUri: "https://tier-list-app-2c41fcb37475.herokuapp.com/"  
     });
 
     useEffect(() => {
@@ -30,7 +30,7 @@ export default function LoginScreen() {
 
         try {
             setLoading(true);
-            const message = await loginWithGoogle(token);
+            const message = await loginWithGoogle(token);  
             Alert.alert("Success", message);
             router.push("/Landing");
         } catch (err: any) {
@@ -45,11 +45,11 @@ export default function LoginScreen() {
             Alert.alert("Error", "Please fill in both fields.");
             return;
         }
-    
+
         try {
-            const response = await loginUser(email, password);
+            const response = await loginUser(email, password);  
             console.log("Login API Response:", response);
-    
+
             if (response && response.message === "Login successful") {
                 await AsyncStorage.setItem("userEmail", email);
                 console.log("Navigating to Landing...");
