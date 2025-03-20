@@ -58,7 +58,7 @@ const appStyles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 15,
     marginTop: 10,
-    width: "10%",
+    width: "15%",
     alignItems: "center",
   },
   signUpButton: {
@@ -68,7 +68,7 @@ const appStyles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 30,
     marginBottom: 15,
-    width: "10%",
+    width: "15%",
     alignItems: "center",
   },
 
