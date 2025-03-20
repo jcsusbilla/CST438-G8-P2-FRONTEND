@@ -10,6 +10,7 @@ export default function LandingScreen() {
     const { email } = useLocalSearchParams();
     const [user, setUser] = useState<{ username: string, firstName: string, lastName: string } | null>(null);
     const [emailStr, setEmailStr] = useState("");
+    
 
     useEffect(() => {
         const loadEmail = async () => {
@@ -33,11 +34,11 @@ export default function LandingScreen() {
         loadEmail();
     }, []);
 
-    // **Define getUserData function**
+    // Fetch user details
     const getUserData = async (emailToFetch: string) => {
         try {
             console.log("Fetching user data for:", emailToFetch);
-            const userData = await fetchUserDetails(emailToFetch); // Ensure this function exists in userApi.ts
+            const userData = await fetchUserDetails(emailToFetch);
             console.log("Fetched user data:", userData);
             setUser(userData);
         } catch (error) {
@@ -50,7 +51,7 @@ export default function LandingScreen() {
         <View style={appStyles.container}>
             {user ? (
                 <Text style={appStyles.title}>
-                    Hello, {user.firstName} {user.lastName}
+                    Hello, {user.firstName} {user.lastName}  {/* ✅ FIXED */}
                 </Text>
             ) : (
                 <Text>Loading user details...</Text>
@@ -61,8 +62,12 @@ export default function LandingScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={appStyles.createAccountButton} onPress={() => router.push("/TierList")}>
-                <Text style={appStyles.buttonText}>TIER LIST PAGE</Text>
+                <Text style={appStyles.buttonText}>CREATE TIER LIST</Text>
             </TouchableOpacity>
+
+            {/* <TouchableOpacity style={appStyles.createAccountButton} onPress={() => router.push("/PastTierList")}>
+                <Text style={appStyles.buttonText}>PREVIOUS TIER LISTS</Text>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
                 style={appStyles.button}

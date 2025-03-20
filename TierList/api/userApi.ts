@@ -1,28 +1,39 @@
 import API_BASE_URL from './apiConfig';
 
 // LOGIN API - /user/login (x-www-form-urlencoded)
-export const loginUser = async (email: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/user/login`, {
+export const loginUser = async (email: string, password: string): Promise<{ message: string; email: string; userName: string }> => {
+    const response = await fetch("http://localhost:8080/user/login", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ email, password }).toString(),
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
     });
 
     if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
     }
 
-    return await response.json(); // ✅ Parse JSON correctly
+    return response.json();
 };
 
-// REGISTER API - /user/add (x-www-form-urlencoded)
-export const registerUser = async (userData: any) => {
-    console.log("Sending Registration Request:", userData);
+interface RegisterUserData {
+    user_name: string;
+    email: string;
+    password: string;
+    first_name?: string;
+    last_name?: string;
+}
 
-    const response = await fetch(`${API_BASE_URL}/user/add`, {
+// REGISTER API - /user/add (x-www-form-urlencoded)
+export const registerUser = async (userData: RegisterUserData): Promise<{ message: string }> => {
+    const response = await fetch("http://localhost:8080/user/add", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(userData)
     });
 
     if (!response.ok) {
@@ -64,13 +75,20 @@ export const logoutUser = async () => {
 };
 
 export const fetchUserDetails = async (email: string) => {
+    if (!email || email.trim() === "") {
+        throw new Error("Invalid email provided");
+    }
+
+    console.log("Fetching user details for:", email);
+
     const response = await fetch(`${API_BASE_URL}/user/details?email=${encodeURIComponent(email)}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
-        throw new Error(await response.text());
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
     }
 
     return await response.json();

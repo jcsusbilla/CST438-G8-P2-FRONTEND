@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
 import appStyles from "./styles/appStyles.js";
-import { registerUser } from "@/api/userApi";
+import { registerUser, loginUser } from "@/api/userApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SignUpScreen() {
@@ -14,32 +14,52 @@ export default function SignUpScreen() {
     const [lastName, setLastName] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const validatePassword = (password: string) => password.length >= 8 && /\d/.test(password) && /[A-Z]/.test(password);
-
     const handleRegister = async () => {
         if (!username || !email || !password) {
             Alert.alert("Error", "Please fill in all required fields.");
             return;
         }
     
-        console.log("Collected User Data:");
-        console.log("Username:", username);
-        console.log("Email:", email);
-        console.log("Password:", password);
-    
         try {
-            const userData = { username, email, password, firstName, lastName };
-            await registerUser(userData);
-            console.log("Registration successful!");
+            setLoading(true);
     
-            Alert.alert("Success", "Account created! Redirecting...");
+            // Define userData with correct keys
+            const userData = {
+                user_name: username, 
+                email, 
+                password, 
+                first_name: firstName, 
+                last_name: lastName
+            };
     
-            await AsyncStorage.setItem("userEmail", email);
-            router.replace("/Landing");
-        } catch (err: any) {
-            console.error("Registration error:", err.message);
-            Alert.alert("Registration Failed", err.message);
+            // Register user in database
+            const registerResponse = await registerUser(userData);
+    
+            if (registerResponse.message.includes("User registered successfully")) {
+                console.log("User registered successfully, now logging in...");
+    
+                // Auto login the user after signup
+                const loginResponse = await loginUser(email, password);
+                
+                if (loginResponse.message === "Login successful") {
+                    console.log("Login successful after signup.");
+    
+                    // Save email to AsyncStorage for session persistence
+                    await AsyncStorage.setItem("userEmail", email);
+    
+                    // Redirect to Landing page
+                    router.replace(`/Landing?email=${email}`);
+                } else {
+                    Alert.alert("Login Failed", "Please try logging in manually.");
+                }
+            } else {
+                Alert.alert("Registration Error", registerResponse.message);
+            }
+        } catch (err) {
+            console.error("Signup error:", err);
+            Alert.alert("Signup Failed", "An error occurred. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -57,12 +77,12 @@ export default function SignUpScreen() {
                 <Text style={appStyles.buttonText}>{loading ? "Registering..." : "REGISTER"}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/Login")}>
-                <Text style={appStyles.buttonText}>LOG IN</Text>
-            </TouchableOpacity>
-
             <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/")}>
                 <Text style={appStyles.buttonText}>BACK</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/Login")}>
+                <Text style={appStyles.buttonText}>LOG IN</Text>
             </TouchableOpacity>
         </View>
     );
