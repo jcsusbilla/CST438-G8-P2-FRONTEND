@@ -7,6 +7,8 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AdminService } from "@/api/apiService";
 import appStyles from "./styles/appStyles.js";
+import axios from 'axios';
+import API_BASE_URL from '@/api/apiConfig';
 
 export default function AdminScreen() {
 	const router = useRouter();
@@ -86,41 +88,57 @@ export default function AdminScreen() {
       
         try {
           setLoading(true);
-          const userData = {
-            user_name: newUsername,
-            email: newEmail,
-            password: newPassword,
-            first_name: newFirstName,
-            last_name: newLastName,
-            role: newRole
-          };
           
-          console.log("Creating new user with data:", userData);
+          const formData = new FormData();
+          formData.append('username', newUsername); 
+          formData.append('email', newEmail);
+          formData.append('password', newPassword);
+          if (newFirstName) formData.append('first_name', newFirstName);
+          if (newLastName) formData.append('last_name', newLastName);
+          formData.append('role', newRole);
           
-          await AdminService.createUser(userData);
-          Alert.alert("Success", "User created successfully");
+          console.log("Creating new user with form data:", formData);
           
-          // Clear form and close modal
-          setNewUsername('');
-          setNewEmail('');
-          setNewPassword('');
-          setNewFirstName('');
-          setNewLastName('');
-          setNewRole('USER');
-          setCreateUserModal(false);
+
+          const response = await axios({
+            method: 'post',
+            url: `${API_BASE_URL}/user/admin/create-user`,
+            data: formData,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+            withCredentials: true
+          });
           
-          // Refresh user list
-          fetchUsers();
+          console.log("Create user response:", response.data);
+          
+          if (response.data.includes("successfully")) {
+            Alert.alert("Success", "User created successfully");
+            
+            // Clear form and close modal
+            setNewUsername('');
+            setNewEmail('');
+            setNewPassword('');
+            setNewFirstName('');
+            setNewLastName('');
+            setNewRole('USER');
+            setCreateUserModal(false);
+            
+            // Refresh user list
+            fetchUsers();
+          } else {
+            Alert.alert("Error", response.data || "Failed to create user");
+          }
         } catch (error) {
           console.error("Error creating user:", error);
           Alert.alert(
             "Error", 
-            `Failed to create user: ${error.message || "Unknown error"}`
+            `Failed to create user: ${error.response?.data || error.message || "Unknown error"}`
           );
         } finally {
           setLoading(false);
         }
-      };
+    };
 
 	const handleUpdateUserRole = async (userId, newRole) => {
 		try {
