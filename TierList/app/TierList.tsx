@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, TextInput, TouchableOpacity, Button, StyleSheet, Alert } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, Button, StyleSheet, Alert, ScrollView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import API_BASE_URL from "@/api/apiConfig";
@@ -10,13 +10,35 @@ export default function TierListScreen() {
     const [userId, setUserId] = useState<number | null>(null); // Save logged-in user's ID
     const [tierListTitle, setTierListTitle] = useState("Enter Tier List Title");
 
-    // Define allowed tier values
+    const subjectOptions = ["Games", "Movies", "Food", "Music", "Anime"];
+    const [subject, setSubject] = useState(""); // default
+
+    // define allowed tier values
     type TierType = "S" | "A" | "B" | "C" | "D" | "F";
     type TierListState = Record<TierType, string[]>;
 
+    // const [activeTierList, setActiveTierList] = useState<TierListState>({
+    //     S: [], A: [], B: [], C: [], D: [], F: []
+    // });
+    // ✅ Tier content
     const [activeTierList, setActiveTierList] = useState<TierListState>({
-        S: [], A: [], B: [], C: [], D: [], F: []
+        S: [],
+        A: [],
+        B: [],
+        C: [],
+        D: [],
+        F: [],
     });
+
+    // ✅ Input field for each tier
+    const [inputText, setInputText] = useState<Record<TierType, string>>({
+        S: "",
+        A: "",
+        B: "",
+        C: "",
+        D: "",
+        F: "",
+    }); // ✅ ADDED
 
     // Fetch logged-in user's ID
     useEffect(() => {
@@ -81,94 +103,118 @@ export default function TierListScreen() {
         fetchTierList();
     }, [id]);
 
-    // Handle Adding an Item to a Tier
     const handleAddItem = (tier: TierType, text: string) => {
         if (text.trim()) {
-            setActiveTierList(prev => {
-                const updatedList = {
-                    ...prev,
-                    [tier]: [...prev[tier], text.trim()]
-                };
-                console.log(`Added item: "${text.trim()}" to Tier: ${tier}`, updatedList);
-                return updatedList;
-            });
+          setActiveTierList(prev => ({
+            ...prev,
+            [tier]: [...prev[tier], text.trim()]
+          }));
+          setInputText(prev => ({
+            ...prev,
+            [tier]: "" // ✅ Clear input
+          }));
+          console.log(`📥 Added "${text.trim()}" to tier ${tier}`);
         }
-    };
+      };
 
-    // ✅ Handle Saving Tier List with Correct User ID
-    const handleSaveTierList = async () => {
+      const handleSaveTierList = async () => {
         console.log("🟢 Save Tier List Button Clicked");
     
         if (!userId) {
-            console.error("❌ User ID is missing");
-            Alert.alert("Error", "User not logged in.");
-            return;
+          console.error("❌ User ID is missing");
+          Alert.alert("Error", "User not logged in.");
+          return;
         }
+    
+        const rankings = Object.entries(activeTierList).flatMap(([tier, items]) =>
+          items.map(item => ({ tier, item }))
+        );
+    
+        console.log("📦 Rankings to send:", rankings);
     
         const payload = {
-            title: tierListTitle,
-            subject: "General",
-            userId: Number(userId),
-            rankings: Object.entries(activeTierList).flatMap(([tier, items]) =>
-                items.map(item => ({ tier, item }))
-            ),
+          title: tierListTitle,
+          subject,
+          userId: Number(userId),
+          rankings,
         };
     
-        console.log("📤 Sending Tier List Data:", JSON.stringify(payload, null, 2));
+        console.log("📤 Payload:", JSON.stringify(payload, null, 2));
     
         try {
-            const response = await fetch(`${API_BASE_URL}/tierlists/add`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
+          const response = await fetch(`${API_BASE_URL}/tierlists/add`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
     
-            const responseText = await response.text();
-            console.log("🔄 API Response:", responseText);
+          const responseText = await response.text();
+          console.log("🔄 API Response:", responseText);
     
-            if (!response.ok) throw new Error("Failed to save tier list");
+          if (!response.ok) throw new Error("Failed to save tier list");
     
-            console.log("✅ Successfully saved Tier List");
-            Alert.alert("Success", "Tier list saved successfully!");
-            router.push("/Landing");
+          console.log("✅ Successfully saved Tier List");
+          Alert.alert("Success", "Tier list saved successfully!");
+          router.push("/Landing");
         } catch (error) {
-            console.error("❌ Error saving tier list:", error);
-            Alert.alert("Error", "Failed to save tier list.");
+          console.error("❌ Error saving tier list:", error);
+          Alert.alert("Error", "Failed to save tier list.");
         }
-    };
+      };
 
-    return (
-        <View style={styles.container}>
-            {/* Active Tier List */}
-            <View style={styles.cardLarge}>
-                <TextInput
-                    style={styles.titleInput}
-                    value={tierListTitle}
-                    onChangeText={setTierListTitle}
-                    placeholder="Enter Tier List Title"
-                />
-                {Object.entries(activeTierList).map(([tier, items]) => (
-                    <View key={tier} style={styles.tierContainerLarge}>
-                        <Text style={styles.bold}>{tier}:</Text>
-                        <Text style={styles.tierItem}>{items.join(", ")}</Text>
-                        <TextInput
-                            style={styles.smallInput}
-                            placeholder={`Add to ${tier} tier`}
-                            onSubmitEditing={(event: { nativeEvent: { text: string } }) => 
-                                handleAddItem(tier as TierType, event.nativeEvent.text)
-                            }
-                        />
-                    </View>
+      return (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.cardLarge}>
+            <Text style={styles.label}>Select Subject:</Text>
+                <select
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                style={styles.dropdown}
+                >
+                {subjectOptions.map((option) => (
+                    <option key={option} value={option}>
+                    {option}
+                    </option>
                 ))}
-            </View>
-
-            {/* Save Button */}
-            <TouchableOpacity style={styles.button} onPress={handleSaveTierList}>
-                <Text style={styles.buttonText}>Save Tier List</Text>
-            </TouchableOpacity>
-        </View>
-    );
-}
+                </select>
+            <TextInput
+              style={styles.titleInput}
+              value={tierListTitle}
+              onChangeText={setTierListTitle}
+              placeholder="Enter Tier List Title"
+            />
+    
+            {Object.entries(activeTierList).map(([tier, items]) => (
+              <View key={tier} style={styles.tierContainerLarge}>
+                <Text style={styles.bold}>{tier}:</Text>
+                <Text style={styles.tierItem}>{items.join(", ")}</Text>
+    
+                <TextInput
+                  style={styles.smallInput}
+                  placeholder={`Add to ${tier} tier`}
+                  value={inputText[tier as TierType]}
+                  onChangeText={text =>
+                    setInputText(prev => ({ ...prev, [tier as TierType]: text }))
+                  }
+                />
+    
+                <Button
+                  title="Add"
+                  onPress={() =>
+                    handleAddItem(tier as TierType, inputText[tier as TierType])
+                  }
+                />
+              </View>
+            ))}
+          </View>
+    
+          <TouchableOpacity style={styles.button} onPress={handleSaveTierList}>
+            <Text style={styles.buttonText}>Save Tier List</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      );
+    }
+    
 
 const styles = StyleSheet.create({
     container: {
@@ -204,6 +250,26 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 18,
     },
+    label: {
+        fontSize: 16,
+        fontWeight: "bold",
+        marginBottom: 5,
+    },
+    dropdown: {
+        width: "100%",
+        padding: 8,
+        fontSize: 16,
+        borderRadius: 5,
+        marginBottom: 15,
+    },
+    subjectInput: {
+        fontSize: 18,
+        color: "#333",
+        borderBottomWidth: 1,
+        borderColor: "#ccc",
+        marginBottom: 15,
+        paddingBottom: 5,
+    },
     tierItem: {
         fontSize: 16,
         fontWeight: "bold",
@@ -231,4 +297,9 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "bold",
     },
+    scrollContainer: {
+        padding: 20,
+        backgroundColor: "#f5f5f5",
+    },
+    
 });

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text, View, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { logoutUser, fetchUserDetails } from "@/api/userApi"; // Ensure this is imported
+import { logoutUser, fetchUserDetails } from "@/api/userApi";
 import appStyles from "./styles/appStyles.js";
 
 export default function LandingScreen() {
@@ -32,6 +32,18 @@ export default function LandingScreen() {
         };
     
         loadEmail();
+    }, []);
+
+    //jc
+    useEffect(() => {
+        const fetchUserId = async () => {
+            const storedUserId = await AsyncStorage.getItem("userId");
+            console.log("🔍 Retrieved `userId` from AsyncStorage:", storedUserId);
+            if (!storedUserId) {
+                console.warn("`userId` is missing in AsyncStorage!");
+            }
+        };
+        fetchUserId();
     }, []);
 
     // Fetch user details
@@ -65,9 +77,9 @@ export default function LandingScreen() {
                 <Text style={appStyles.buttonText}>CREATE TIER LIST</Text>
             </TouchableOpacity>
 
-            {/* <TouchableOpacity style={appStyles.createAccountButton} onPress={() => router.push("/PastTierList")}>
+            <TouchableOpacity style={appStyles.createAccountButton} onPress={() => router.push("/PastTierList")}>
                 <Text style={appStyles.buttonText}>PREVIOUS TIER LISTS</Text>
-            </TouchableOpacity> */}
+            </TouchableOpacity>
 
             <TouchableOpacity
                 style={appStyles.button}

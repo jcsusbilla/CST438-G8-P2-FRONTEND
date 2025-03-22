@@ -16,13 +16,17 @@ export default function LoginScreen() {
             Alert.alert("Error", "Please fill in both fields.");
             return;
         }
-
+    
         try {
             setLoading(true);
             const response = await loginUser(email, password);
-            
             if (response && response.message === "Login successful") {
                 await AsyncStorage.setItem("userEmail", email);
+                //jc
+                if (response.userId) {
+                    await AsyncStorage.setItem("userId", String(response.userId));
+                    console.log("✅ Stored userId:", response.userId);
+                }
                 router.replace(`/Landing?email=${email}`);
             } else {
                 Alert.alert("Login Failed", response.message || "Unexpected error.");
