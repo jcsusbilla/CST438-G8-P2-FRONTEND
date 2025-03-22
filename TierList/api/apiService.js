@@ -39,7 +39,12 @@ const AuthService = {
         try {
             const response = await api.post('/user/login', { email, password });
             if (response.data && response.data.message === "Login successful") {
+            
                 await AsyncStorage.setItem('userEmail', email);
+                
+                if (response.data.role) {
+                    await AsyncStorage.setItem('userRole', response.data.role);
+                }
             }
             return response.data;
         } catch (error) {
@@ -51,6 +56,7 @@ const AuthService = {
         try {
             const response = await api.get('/user/logout');
             await AsyncStorage.removeItem('userEmail');
+            await AsyncStorage.removeItem('userRole');
             return response.data;
         } catch (error) {
             throw handleApiError(error);
@@ -60,6 +66,9 @@ const AuthService = {
     getUserDetails: async (email) => {
         try {
             const response = await api.get(`/user/details?email=${encodeURIComponent(email)}`);
+            if(response.data) {
+                await AsyncStorage.setItem('userRole', response.data.role || 'USER');
+            }
             return response.data;
         } catch (error) {
             throw handleApiError(error);

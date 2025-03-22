@@ -31,7 +31,11 @@ export default function AdminScreen() {
 		const checkAuthAndFetchUsers = async () => {
 			try {
 				const email = await AsyncStorage.getItem("userEmail");
-				if (!email || !email.includes("admin")) {
+				const role = await AsyncStorage.getItem("userRole");
+
+				// This is to check if user is authenticated AND has ADMIN role
+				if (!email || role !== "ADMIN") {
+					console.log("Access denied. Email:", email, "Role:", role);
 					Alert.alert("Access Denied", "Admin privileges required");
 					router.replace("/Landing");
 					return;
