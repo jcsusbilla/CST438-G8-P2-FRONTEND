@@ -80,65 +80,66 @@ export default function AdminScreen() {
 		}
 	};
 
-    const handleCreateUser = async () => {
-        if (!newUsername || !newEmail || !newPassword) {
-          Alert.alert("Error", "Username, email, and password are required");
-          return;
-        }
-      
-        try {
-          setLoading(true);
-          
-          const formData = new FormData();
-          formData.append('username', newUsername); 
-          formData.append('email', newEmail);
-          formData.append('password', newPassword);
-          if (newFirstName) formData.append('first_name', newFirstName);
-          if (newLastName) formData.append('last_name', newLastName);
-          formData.append('role', newRole);
-          
-          console.log("Creating new user with form data:", formData);
-          
-
-          const response = await axios({
-            method: 'post',
-            url: `${API_BASE_URL}/user/admin/create-user`,
-            data: formData,
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            withCredentials: true
-          });
-          
-          console.log("Create user response:", response.data);
-          
-          if (response.data.includes("successfully")) {
-            Alert.alert("Success", "User created successfully");
-            
-            // Clear form and close modal
-            setNewUsername('');
-            setNewEmail('');
-            setNewPassword('');
-            setNewFirstName('');
-            setNewLastName('');
-            setNewRole('USER');
-            setCreateUserModal(false);
-            
-            // Refresh user list
-            fetchUsers();
-          } else {
-            Alert.alert("Error", response.data || "Failed to create user");
-          }
-        } catch (error) {
-          console.error("Error creating user:", error);
-          Alert.alert(
-            "Error", 
-            `Failed to create user: ${error.response?.data || error.message || "Unknown error"}`
-          );
-        } finally {
-          setLoading(false);
-        }
-    };
+	const handleCreateUser = async () => {
+		if (!newUsername || !newEmail || !newPassword) {
+		  Alert.alert("Error", "Username, email, and password are required");
+		  return;
+		}
+	  
+		try {
+		  setLoading(true);
+		  
+		  const formData = new FormData();
+		  formData.append('username', newUsername);
+		  formData.append('email', newEmail);
+		  formData.append('password', newPassword);
+		  formData.append('role', newRole);
+		  
+		  
+		  if (newFirstName) formData.append('first_name', newFirstName);
+		  if (newLastName) formData.append('last_name', newLastName);
+		  
+		  console.log("Creating new user with form data:", formData);
+		  
+		  const response = await axios({
+			method: 'post',
+			url: `${API_BASE_URL}/user/admin/create-user`,
+			data: formData,
+			headers: {
+			  'Content-Type': 'multipart/form-data',
+			},
+			withCredentials: true
+		  });
+		  
+		  console.log("Create user response:", response.data);
+		  
+		  if (response.data.includes("successfully")) {
+			Alert.alert("Success", "User created successfully");
+			
+			// Clear form and close modal
+			setNewUsername('');
+			setNewEmail('');
+			setNewPassword('');
+			setNewFirstName('');
+			setNewLastName('');
+			setNewRole('USER');
+			setCreateUserModal(false);
+			
+			// Refresh user list
+			fetchUsers();
+		  } else {
+			Alert.alert("Error", response.data || "Failed to create user");
+		  }
+		} catch (error) {
+		  console.error("Error creating user:", error);
+		  Alert.alert(
+			"Error", 
+			`Failed to create user: ${error.response?.data || error.message || "Unknown error"}`
+		  );
+		} finally {
+		  setLoading(false);
+		}
+	};
 
 	const handleUpdateUserRole = async (userId, newRole) => {
 		try {
