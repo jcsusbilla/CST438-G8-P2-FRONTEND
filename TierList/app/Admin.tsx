@@ -7,8 +7,8 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AdminService } from "@/api/apiService";
 import appStyles from "./styles/appStyles.js";
-import axios from 'axios';
-import API_BASE_URL from '@/api/apiConfig';
+import axios from "axios";
+import API_BASE_URL from "@/api/apiConfig";
 
 export default function AdminScreen() {
 	const router = useRouter();
@@ -16,12 +16,10 @@ export default function AdminScreen() {
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 
-	// Modal states
 	const [createUserModal, setCreateUserModal] = useState(false);
 	const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
 
-	// Form states for create user
 	const [newUsername, setNewUsername] = useState("");
 	const [newEmail, setNewEmail] = useState("");
 	const [newPassword, setNewPassword] = useState("");
@@ -57,23 +55,37 @@ export default function AdminScreen() {
 			const response = await AdminService.getAllUsers();
 			console.log("Fetched users:", response);
 
+			// This is a Log first few users for debugging
+			if (Array.isArray(response) && response.length > 0) {
+				console.log("User sample:", response.slice(0, 3));
+
+				console.log("First user active property:", {
+					exists: "active" in response[0],
+					value: response[0].active,
+					type: typeof response[0].active,
+					stringValue: String(response[0].active),
+				});
+
+				// This counts how many users are active vs inactive
+				const activeCount = response.filter((u) => u.active !== false).length;
+				const inactiveCount = response.filter((u) => u.active === false).length;
+				console.log(`User status count: ${activeCount} active, ${inactiveCount} inactive`);
+			}
+
 			if (Array.isArray(response)) {
 				setUsers(response);
 			} else {
-				// If the response is not an array, check if it might be nested
 				if (response && Array.isArray(response.data)) {
 					setUsers(response.data);
 				} else {
 					console.error("Unexpected response format:", response);
 					Alert.alert("Error", "Unexpected data format from server");
-					// Fallback to empty array
 					setUsers([]);
 				}
 			}
 		} catch (error) {
 			console.error("Error fetching users:", error);
 			Alert.alert("Error", "Failed to fetch users from server");
-			// Keep existing users if there was an error
 		} finally {
 			setLoading(false);
 			setRefreshing(false);
@@ -82,62 +94,58 @@ export default function AdminScreen() {
 
 	const handleCreateUser = async () => {
 		if (!newUsername || !newEmail || !newPassword) {
-		  Alert.alert("Error", "Username, email, and password are required");
-		  return;
+			Alert.alert("Error", "Username, email, and password are required");
+			return;
 		}
-	  
+
 		try {
-		  setLoading(true);
-		  
-		  const formData = new FormData();
-		  formData.append('username', newUsername);
-		  formData.append('email', newEmail);
-		  formData.append('password', newPassword);
-		  formData.append('role', newRole);
-		  
-		  
-		  if (newFirstName) formData.append('first_name', newFirstName);
-		  if (newLastName) formData.append('last_name', newLastName);
-		  
-		  console.log("Creating new user with form data:", formData);
-		  
-		  const response = await axios({
-			method: 'post',
-			url: `${API_BASE_URL}/user/admin/create-user`,
-			data: formData,
-			headers: {
-			  'Content-Type': 'multipart/form-data',
-			},
-			withCredentials: true
-		  });
-		  
-		  console.log("Create user response:", response.data);
-		  
-		  if (response.data.includes("successfully")) {
-			Alert.alert("Success", "User created successfully");
-			
-			// Clear form and close modal
-			setNewUsername('');
-			setNewEmail('');
-			setNewPassword('');
-			setNewFirstName('');
-			setNewLastName('');
-			setNewRole('USER');
-			setCreateUserModal(false);
-			
-			// Refresh user list
-			fetchUsers();
-		  } else {
-			Alert.alert("Error", response.data || "Failed to create user");
-		  }
+			setLoading(true);
+
+			const formData = new FormData();
+			formData.append("username", newUsername);
+			formData.append("email", newEmail);
+			formData.append("password", newPassword);
+			formData.append("role", newRole);
+
+			if (newFirstName) formData.append("first_name", newFirstName);
+			if (newLastName) formData.append("last_name", newLastName);
+
+			console.log("Creating new user with form data:", formData);
+
+			const response = await axios({
+				method: "post",
+				url: `${API_BASE_URL}/user/admin/create-user`,
+				data: formData,
+				headers: {
+					"Content-Type": "multipart/form-data",
+				},
+				withCredentials: true,
+			});
+
+			console.log("Create user response:", response.data);
+
+			if (response.data.includes("successfully")) {
+				Alert.alert("Success", "User created successfully");
+
+				// This is to clear the form and close modal
+				setNewUsername("");
+				setNewEmail("");
+				setNewPassword("");
+				setNewFirstName("");
+				setNewLastName("");
+				setNewRole("USER");
+				setCreateUserModal(false);
+
+				// This refreshes user list
+				fetchUsers();
+			} else {
+				Alert.alert("Error", response.data || "Failed to create user");
+			}
 		} catch (error) {
-		  console.error("Error creating user:", error);
-		  Alert.alert(
-			"Error", 
-			`Failed to create user: ${error.response?.data || error.message || "Unknown error"}`
-		  );
+			console.error("Error creating user:", error);
+			Alert.alert("Error", `Failed to create user: ${error.response?.data || error.message || "Unknown error"}`);
 		} finally {
-		  setLoading(false);
+			setLoading(false);
 		}
 	};
 
@@ -159,19 +167,21 @@ export default function AdminScreen() {
 	const handleDisableUser = async (userId) => {
 		try {
 			setLoading(true);
-			console.log(`Toggling active status for user ${userId}`);
 
-			// Find the current user object to see its status
 			const userToUpdate = users.find((u) => u.id === userId);
-			console.log("Current user status:", userToUpdate?.active);
+			const currentStatus = userToUpdate?.active === false ? "inactive" : "active";
+			console.log(`Toggling user ${userId} from ${currentStatus} status`);
+			console.log("User object:", userToUpdate);
 
+			// This is the call to the backend
 			const response = await AdminService.disableUser(userId);
 			console.log("Disable user response:", response);
 
-			Alert.alert("Success", "User status updated successfully");
+			Alert.alert("Success", `User status updated: ${currentStatus === "active" ? "disabled" : "enabled"}`);
 
-			// Force refresh users
-			fetchUsers();
+			setTimeout(() => {
+				fetchUsers();
+			}, 300);
 		} catch (error) {
 			console.error("Error toggling user status:", error);
 			Alert.alert("Error", `Failed to update user status: ${error.message || "Unknown error"}`);
@@ -249,7 +259,7 @@ export default function AdminScreen() {
 									{item.firstName || ""} {item.lastName || ""}
 								</Text>
 								<Text style={[styles.userRole, item.role === "ADMIN" ? styles.adminRole : styles.userRoleRegular]}>Role: {item.role || "USER"}</Text>
-								<Text style={[styles.userStatus, item.active === true || item.active === undefined ? styles.activeStatus : styles.inactiveStatus]}>Status: {item.active === false ? "Inactive" : "Active"}</Text>
+								<Text style={[styles.userStatus, item.active === false || item.active === "false" ? styles.inactiveStatus : styles.activeStatus]}>Status: {item.active === false || item.active === "false" ? "Inactive" : "Active"}</Text>
 							</View>
 
 							<View style={styles.actionButtonsRow}>
@@ -258,7 +268,7 @@ export default function AdminScreen() {
 								</TouchableOpacity>
 
 								<TouchableOpacity style={[styles.actionButton, styles.disableButton]} onPress={() => handleDisableUser(item.id)}>
-									<Text style={styles.actionButtonText}>{item.active === false ? "Enable" : "Disable"}</Text>
+									<Text style={styles.actionButtonText}>{item.active === false || item.active === "false" ? "Enable" : "Disable"}</Text>
 								</TouchableOpacity>
 
 								<TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => confirmDelete(item)}>
@@ -277,7 +287,6 @@ export default function AdminScreen() {
 				<Text style={styles.buttonText}>Back to Dashboard</Text>
 			</TouchableOpacity>
 
-			{/* Create User Modal */}
 			<Modal visible={createUserModal} animationType="slide" transparent={true}>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalContent}>
@@ -316,7 +325,6 @@ export default function AdminScreen() {
 								style={[styles.modalButton, styles.cancelButton]}
 								onPress={() => {
 									setCreateUserModal(false);
-									// Clear form fields
 									setNewUsername("");
 									setNewEmail("");
 									setNewPassword("");
@@ -336,7 +344,6 @@ export default function AdminScreen() {
 				</View>
 			</Modal>
 
-			{/* Confirm Delete Modal */}
 			<Modal visible={confirmDeleteModal} animationType="slide" transparent={true}>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalContent}>
