@@ -4,6 +4,7 @@ import { Text, View, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { logoutUser, fetchUserDetails } from "@/api/userApi"; // Ensure this is imported
 import appStyles from "./styles/appStyles.js";
+import API_BASE_URL from "@/api/apiConfig";
 
 export default function LandingScreen() {
 	const router = useRouter();
@@ -16,7 +17,9 @@ export default function LandingScreen() {
 	} | null>(null);
 	const [emailStr, setEmailStr] = useState("");
 	const [isAdmin, setIsAdmin] = useState(false);
+	const [userId, setUserId] = useState<string | null>(null);
 
+	// First load the email from parameters or storage
 	useEffect(() => {
 		const loadEmail = async () => {
 			try {
@@ -39,17 +42,37 @@ export default function LandingScreen() {
 		loadEmail();
 	}, []);
 
-    //jc
+    // Fetch and verify user ID
     useEffect(() => {
-        const fetchUserId = async () => {
-            const storedUserId = await AsyncStorage.getItem("userId");
-            console.log("🔍 Retrieved `userId` from AsyncStorage:", storedUserId);
-            if (!storedUserId) {
-                console.warn("`userId` is missing in AsyncStorage!");
+        const fetchCorrectUserId = async () => {
+            try {
+                if (!emailStr) return;
+                
+                // Always fetch the correct user ID from the server
+                const response = await fetch(`${API_BASE_URL}/user/getUserId?email=${encodeURIComponent(emailStr)}`);
+                
+                if (!response.ok) {
+                    console.error("Failed to fetch user ID from server");
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data && data.userId) {
+                    const newUserId = String(data.userId);
+                    console.log("✅ Retrieved correct userId from server:", newUserId);
+                    
+                    // Update state and storage with the correct ID
+                    setUserId(newUserId);
+                    await AsyncStorage.setItem("userId", newUserId);
+                }
+            } catch (error) {
+                console.error("Error fetching correct user ID:", error);
             }
         };
-        fetchUserId();
-    }, []);
+        
+        fetchCorrectUserId();
+    }, [emailStr]);
 
 	// Fetch user details
 	const getUserData = async (emailToFetch: string) => {
@@ -106,6 +129,7 @@ export default function LandingScreen() {
 				onPress={async () => {
 					await AsyncStorage.removeItem("userEmail");
 					await AsyncStorage.removeItem("userRole");
+					await AsyncStorage.removeItem("userId");
 					router.replace("/Login");
 				}}
 			>

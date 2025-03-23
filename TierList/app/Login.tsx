@@ -73,10 +73,25 @@ export default function LoginScreen() {
             // Store user data in AsyncStorage
             await AsyncStorage.setItem("userEmail", googleEmail);
             
-            // Prepare to register or log in the user with Google credentials
-            console.log("Redirecting to Landing with Google data");
+            // Clear any existing userId from storage to force fresh retrieval
+            await AsyncStorage.removeItem("userId");
             
-            // Navigate to Landing with user info
+            // Get userId from API using the Google email
+            try {
+                const userIdResponse = await fetch(`${API_BASE_URL}/user/getUserId?email=${encodeURIComponent(googleEmail)}`);
+                if (userIdResponse.ok) {
+                    const userIdData = await userIdResponse.json();
+                    if (userIdData && userIdData.userId) {
+                        console.log("✅ Retrieved userId for Google login:", userIdData.userId);
+                        await AsyncStorage.setItem("userId", String(userIdData.userId));
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to get userId for Google login:", error);
+            }
+            
+            // Redirect to Landing
+            console.log("Redirecting to Landing with Google data");
             router.push({
                 pathname: "/Landing",
                 params: { email: googleEmail }
@@ -100,17 +115,37 @@ export default function LoginScreen() {
             setLoading(true);
             console.log("Starting login process for email:", email);
             
+            // First clear any existing userId from storage to avoid using stale data
+            await AsyncStorage.removeItem("userId");
+            
             const response = await AuthService.login(email, password);
             console.log("Login response received:", response);
             
             if (response && response.message === "Login successful") {
-                // Success - store email and redirect
+                // Success - store email
                 await AsyncStorage.setItem("userEmail", email);
-                // Store userId if available
+                
+                // IMPORTANT: Store userId from response if available
                 if (response.userId) {
-                    await AsyncStorage.setItem("userId", String(response.userId));
-                    console.log("✅ Stored userId:", response.userId);
+                    const userId = String(response.userId);
+                    await AsyncStorage.setItem("userId", userId);
+                    console.log("✅ Stored correct userId from login response:", userId);
+                } else {
+                    // If userId not in response, try to get it directly from the API
+                    try {
+                        const userIdResponse = await fetch(`${API_BASE_URL}/user/getUserId?email=${encodeURIComponent(email)}`);
+                        if (userIdResponse.ok) {
+                            const userIdData = await userIdResponse.json();
+                            if (userIdData && userIdData.userId) {
+                                console.log("✅ Retrieved userId from API:", userIdData.userId);
+                                await AsyncStorage.setItem("userId", String(userIdData.userId));
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Failed to get userId:", error);
+                    }
                 }
+                
                 // Redirect to the Landing page after successful login
                 router.replace(`/Landing?email=${email}`);
             } else {
@@ -166,15 +201,6 @@ export default function LoginScreen() {
             >
                 <Text style={appStyles.buttonText}>{loading ? "PROCESSING..." : "LOGIN WITH GOOGLE"}</Text>
             </TouchableOpacity>
-
-            {/* Google Login Button
-            <TouchableOpacity 
-                style={appStyles.button} 
-                onPress={() => request ? promptAsync() : Alert.alert("Error", "Google Login request not initialized.")}
-                disabled={loading}
-            >
-                <Text style={appStyles.buttonText}>{loading ? "PROCESSING..." : "LOGIN WITH GOOGLE"}</Text>
-            </TouchableOpacity> */}
 
             <TouchableOpacity 
                 style={[appStyles.button, appStyles.secondaryButton]} 
