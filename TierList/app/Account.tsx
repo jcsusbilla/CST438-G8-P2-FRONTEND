@@ -13,8 +13,9 @@ export default function Account() {
     const [newUsername, setNewUsername] = useState("");
     const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
     const [newPassword, setNewPassword] = useState("");
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
 
-    // load user ID + fetch user data
     useEffect(() => {
         const fetchUser = async () => {
         const id = await AsyncStorage.getItem("userId");
@@ -22,33 +23,44 @@ export default function Account() {
             setUserId(Number(id));
             const res = await getUserById(Number(id));
             if (res?.username) {
-            setUsername(res.username);
+                setUsername(res.username);
             }
         }
         };
         fetchUser();
     }, []);
-    
+
     const handleUsernameUpdate = async () => {
         if (!userId || !newUsername.trim()) return;
         const result = await updateUsername(userId, newUsername);
         if (result?.message === "Username updated successfully") {
-        setUsername(newUsername);
-        setUsernameModalVisible(false);
-        Alert.alert("Success", result.message);
+            setUsername(newUsername);
+            setUsernameModalVisible(false);
+            Alert.alert("Success", result.message);
         } else {
-        Alert.alert("Error", result?.message || "Failed to update username");
+            Alert.alert("Error", result?.message || "Failed to update username");
         }
     };
 
     const handlePasswordUpdate = async () => {
+        const isValidPassword = (pw: string): boolean => {
+            return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/.test(pw);
+        };
+
         if (!userId || !newPassword.trim()) return;
+
+        if (!isValidPassword(newPassword)) {
+            setModalMessage("Password must be at least 6 characters long, contain letters, numbers, and a special character.");
+            setModalVisible(true);
+        return;
+        }
+
         const result = await updatePassword(userId, newPassword);
         if (result?.message === "Password updated successfully") {
-        setPasswordModalVisible(false);
-        Alert.alert("Success", result.message);
+            setPasswordModalVisible(false);
+            Alert.alert("Success", result.message);
         } else {
-        Alert.alert("Error", result?.message || "Failed to update password");
+            Alert.alert("Error", result?.message || "Failed to update password");
         }
     };
 
@@ -59,14 +71,21 @@ export default function Account() {
             text: "Delete",
             style: "destructive",
             onPress: async () => {
-            if (!userId) return;
-            const result = await deleteUser(userId);
-            if (result?.includes("successfully")) {
-                await AsyncStorage.clear();
-                router.replace("/");
-            } else {
-                Alert.alert("Error", "Could not delete account.");
-            }
+                console.log("Delete button pressed!");
+                if (!userId) {
+                    console.warn("No userId found!");
+                    return;
+                }
+
+                const result = await deleteUser(userId);
+                console.log("Delete result:", result);
+
+                if (result?.includes("successfully")) {
+                    await AsyncStorage.clear();
+                    router.replace("/");
+                } else {
+                    Alert.alert("Error", "Could not delete account.");
+                }
             },
         },
         ]);
@@ -75,11 +94,8 @@ export default function Account() {
   return (
     <View style={appStyles.container}>
         <Text style={appStyles.heading}>Your Account</Text>
-
-        {/* display username */}
         <Text style={appStyles.infoText}>Logged in as: <Text style={appStyles.bold}>{username}</Text></Text>
 
-        {/* buttons */}
         <TouchableOpacity style={appStyles.button} onPress={() => setUsernameModalVisible(true)}>
             <Text style={appStyles.buttonText}>Edit Username</Text>
         </TouchableOpacity>
@@ -96,26 +112,26 @@ export default function Account() {
             <Text style={appStyles.buttonText}>BACK</Text>
         </TouchableOpacity>
 
-        {/* username modal */}
+      {/* username modal */}
         <Modal visible={isUsernameModalVisible} transparent animationType="slide">
             <View style={appStyles.modalContainer}>
                 <View style={appStyles.modalCard}>
-                <Text style={appStyles.modalTitle}>Update Username</Text>
+                    <Text style={appStyles.modalTitle}>Update Username</Text>
 
-                <TextInput
+                    <TextInput
                     style={appStyles.input}
                     placeholder="New Username"
                     value={newUsername}
                     onChangeText={setNewUsername}
-                />
+                    />
 
-                <TouchableOpacity style={appStyles.button} onPress={handleUsernameUpdate}>
+                    <TouchableOpacity style={appStyles.button} onPress={handleUsernameUpdate}>
                     <Text style={appStyles.buttonText}>Save</Text>
-                </TouchableOpacity>
+                    </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setUsernameModalVisible(false)}>
+                    <TouchableOpacity onPress={() => setUsernameModalVisible(false)}>
                     <Text style={appStyles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
+                    </TouchableOpacity>
 
                 </View>
             </View>
@@ -125,24 +141,41 @@ export default function Account() {
         <Modal visible={isPasswordModalVisible} transparent animationType="slide">
             <View style={appStyles.modalContainer}>
                 <View style={appStyles.modalCard}>
-                <Text style={appStyles.modalTitle}>Update Password</Text>
+                    <Text style={appStyles.modalTitle}>Update Password</Text>
 
-                <TextInput
+                    <TextInput
                     style={appStyles.input}
                     placeholder="New Password"
                     secureTextEntry
                     value={newPassword}
                     onChangeText={setNewPassword}
-                />
+                    />
 
-                <TouchableOpacity style={appStyles.button} onPress={handlePasswordUpdate}>
+                    <TouchableOpacity style={appStyles.button} onPress={handlePasswordUpdate}>
                     <Text style={appStyles.buttonText}>Save</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity onPress={() => setPasswordModalVisible(false)}>
-                    <Text style={appStyles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
+                    </TouchableOpacity>
 
+                    <TouchableOpacity onPress={() => setPasswordModalVisible(false)}>
+                    <Text style={appStyles.cancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+
+        {/* password error modal */}
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+        >
+            <View style={appStyles.modalOverlay}>
+                <View style={appStyles.modalCard}>
+                    <Text style={appStyles.modalText}>{modalMessage}</Text>
+
+                    <TouchableOpacity style={appStyles.modalButton} onPress={() => setModalVisible(false)}>
+                    <Text style={appStyles.buttonText}>OK</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </Modal>

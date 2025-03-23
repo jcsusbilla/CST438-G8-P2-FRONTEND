@@ -193,7 +193,7 @@ export default function PastTierList() {
         <Text style={styles.buttonText}>Back to Dashboard</Text>
       </TouchableOpacity>
 
-      {/* Modal for Rankings */}
+      {/* ✅ Modal for Rankings */}
       <Modal
         visible={modalVisible}
         animationType="slide"

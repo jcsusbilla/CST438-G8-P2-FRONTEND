@@ -153,10 +153,31 @@ const appStyles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
   },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,
+  },
+  modalButton: {
+    backgroundColor: "#2196F3",
+    borderRadius: 5,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
   cancelText: {
     color: "#777",
@@ -170,6 +191,18 @@ const appStyles = StyleSheet.create({
     color: "#333",
     fontSize: 16,
     fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  link: {
+    color: "#007BFF",
+    marginTop: 15,
+    textAlign: "center",
+    fontWeight: "500",
   },
 });
 

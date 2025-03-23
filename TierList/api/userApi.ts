@@ -29,20 +29,25 @@ interface RegisterUserData {
 
 // REGISTER API - /user/add (x-www-form-urlencoded)
 export const registerUser = async (userData: RegisterUserData): Promise<{ message: string }> => {
-    const response = await fetch(`${API_BASE_URL}/user/add`, {
+    const response = await fetch("${API_BASE_URL}/user/add", {//jx
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/x-www-form-urlencoded", // Java expects this for @RequestParam
         },
-        body: JSON.stringify(userData)
+        body: new URLSearchParams({
+            user_name,
+            email,
+            password,
+            first_name: first_name || "",
+            last_name: last_name || "",
+        }).toString(),
     });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
-    }
-
-    return await response.json();
+  
+    const data = await response.json();
+    return {
+        status: response.status,
+        ...data,
+    };
 };
 
 // GOOGLE LOGIN API - /user/oauth2/google
@@ -123,43 +128,51 @@ export const fetchTierLists = async () => {
 
 export async function getTierListsWithRankings(userId: number) {
     try {
-      const response = await fetch(`${API_BASE_URL}/tierlists/user/${userId}/with-rankings`);
-      const result = await response.json();
-      return result.tierLists || [];
+        const response = await fetch(`${API_BASE_URL}/tierlists/user/${userId}/with-rankings`);
+        const result = await response.json();
+        return result.tierLists || [];
     } catch (error) {
-      console.error("Failed to fetch tier lists with rankings:", error);
-      return [];
+        console.error("Failed to fetch tier lists with rankings:", error);
+        return [];
     }
 }
 
 export async function getUserById(userId : number) {
     const res = await fetch(`${API_BASE_URL}/user/${userId}`);
     return await res.json();
-  }
+}
   
-  export async function updateUsername(userId : number, newUsername : string) {
-    const res = await fetch(`${API_BASE_URL}/user/updateUsername`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, newUsername }),
-    });
-    return await res.json();
-  }
-  
-  export async function updatePassword(userId : number, newPassword : string) {
-    const res = await fetch(`${API_BASE_URL}/user/updatePassword`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, newPassword }),
-    });
-    return await res.json();
-  }
-  
-  export async function deleteUser(userId : number) {
-    const res = await fetch(`${API_BASE_URL}/user/delete/${userId}`, {
-      method: "DELETE",
-    });
-    return await res.text();
-  }
+export async function updateUsername(userId : number, newUsername : string) {
+const res = await fetch(`${API_BASE_URL}/user/updateUsername`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, newUsername }),
+});
+return await res.json();
+}
 
+export async function updatePassword(userId : number, newPassword : string) {
+    const res = await fetch(`${API_BASE_URL}/user/updatePassword`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, newPassword }),
+    });
+    return await res.json();
+}
+
+export async function deleteUser(id: number) {
+    try {
+        console.log(`🛠 Sending DELETE request to /user/delete/${id}`);
+        const res = await fetch(`${API_BASE_URL}/user/delete/${id}`, {
+            method: "DELETE",
+        });
+    
+        const text = await res.text();
+        console.log("📩 Response from delete:", text);
+        return text;
+    } catch (error) {
+        console.error("❌ Error deleting user:", error);
+        return null;
+    }
+}
   

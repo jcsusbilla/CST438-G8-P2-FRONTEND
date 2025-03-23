@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import { Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
-import appStyles from "./styles/appStyles.js";
-import { registerUser, loginUser } from "@/api/userApi";
+import { Text, View, TouchableOpacity, TextInput, Alert, Modal, ScrollView, Pressable } from "react-native";
+import styles from "./styles/appStyles.js";
+import { registerUser, loginUser, getUserById } from "@/api/userApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SignUpScreen() {
@@ -13,108 +13,139 @@ export default function SignUpScreen() {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [loading, setLoading] = useState(false);
-
-    // const handleSignUp = async () => {
-    //     if (!email || !password || !firstName || !lastName) {
-    //         Alert.alert("Error", "Please fill in all fields.");
-    //         return;
-    //     }
-    
-    //     try {
-    //         setLoading(true);
-    //         const response = await signUpUser(email, password, firstName, lastName);
-    
-    //         if (response && response.message === "Sign up successful") {
-    //             console.log("✅ User Data from API:", response);
-    
-    //             // ✅ Store user details in AsyncStorage
-    //             await AsyncStorage.setItem("userId", String(response.userId));
-    //             await AsyncStorage.setItem("userEmail", response.email);
-    //             await AsyncStorage.setItem("userName", response.userName);
-    //             await AsyncStorage.setItem("firstName", response.firstName);
-    //             await AsyncStorage.setItem("lastName", response.lastName);
-    
-    //             router.replace(`/Landing`);
-    //         } else {
-    //             Alert.alert("Sign Up Failed", response.message || "Unexpected error.");
-    //         }
-    //     } catch (err) {
-    //         Alert.alert("Sign Up Failed", "An error occurred. Please try again.");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const isPasswordValid = (pw: string): boolean => {
+        return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/.test(pw);
+    };
 
     const handleRegister = async () => {
         if (!username || !email || !password) {
-            Alert.alert("Error", "Please fill in all required fields.");
+            setErrorMessage("Username, Email, and Password are required.");
+            setModalVisible(true);
+            return;
+        }
+        
+        if (!isPasswordValid(password)) {
+            setModalMessage(
+            "Password must be at least 6 characters long, contain letters, numbers, and a special character."
+            );
+            setModalVisible(true);
             return;
         }
     
         try {
-            setLoading(true);
+            console.log("registering user...");
+            const registerResponse = await registerUser(
+                username,
+                email,
+                password,
+                firstName,
+                lastName
+          );
     
-            // Define userData with correct keys
-            const userData = {
-                user_name: username, 
-                email, 
-                password, 
-                first_name: firstName, 
-                last_name: lastName
-            };
+          console.log("register response:", registerResponse);
     
-            // Register user in database
-            const registerResponse = await registerUser(userData);
+        if (registerResponse.status === 409 && registerResponse.error) {
+            // show modal with backend error
+            setErrorMessage(registerResponse.error);
+            setModalVisible(true);
+            return;
+        }
+
+        if (registerResponse.status === 201) {
+            console.log("user registered successfully, now logging in...");
     
-            if (registerResponse.message.includes("User registered successfully")) {
-                console.log("User registered successfully, now logging in...");
+            const loginResponse = await loginUser(email, password);
     
-                // Auto login the user after signup
-                const loginResponse = await loginUser(email, password);
-                
-                if (loginResponse.message === "Login successful") {
-                    console.log("Login successful after signup.");
-    
-                    // Save email to AsyncStorage for session persistence
-                    await AsyncStorage.setItem("userEmail", email);
-    
-                    // Redirect to Landing page
-                    router.replace(`/Landing?email=${email}`);
-                } else {
-                    Alert.alert("Login Failed", "Please try logging in manually.");
-                }
+            if (loginResponse?.userId) {
+                await AsyncStorage.setItem("userId", String(loginResponse.userId));
+                router.replace("/Landing");
             } else {
-                Alert.alert("Registration Error", registerResponse.message);
+                setErrorMessage("Login failed after registration.");
+                setModalVisible(true);
             }
+        } 
+        
         } catch (err) {
-            console.error("Signup error:", err);
-            Alert.alert("Signup Failed", "An error occurred. Please try again.");
-        } finally {
-            setLoading(false);
+            console.error("signup error:", err);
+            setErrorMessage("An unexpected error occurred. Please try again.");
+            setModalVisible(true);
         }
     };
 
     return (
-        <View style={appStyles.container}>
-            <Text style={appStyles.title}>Create Your Account!</Text>
+        <View style={styles.container}>
+            <Text style={styles.header}>Create Account</Text>
+        
+            <TextInput
+                style={styles.input}
+                placeholder="Username"
+                value={username}
+                onChangeText={setUsername}
+            />
+            
+            <TextInput
+                style={styles.input}
+                placeholder="Email *"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Password *"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+            />
 
-            <TextInput style={appStyles.input} placeholder="Enter a username" value={username} onChangeText={setUsername} />
-            <TextInput style={appStyles.input} placeholder="Enter email" value={email} onChangeText={setEmail} />
-            <TextInput style={appStyles.input} placeholder="Enter a password" secureTextEntry={true} value={password} onChangeText={setPassword} />
-            <TextInput style={appStyles.input} placeholder="Enter first name" value={firstName} onChangeText={setFirstName} />
-            <TextInput style={appStyles.input} placeholder="Enter last name" value={lastName} onChangeText={setLastName} />
+            <TextInput
+                style={styles.input}
+                placeholder="First Name"
+                value={firstName}
+                onChangeText={setFirstName}
+            />
 
-            <TouchableOpacity style={appStyles.signUpButton} onPress={handleRegister} disabled={loading}>
-                <Text style={appStyles.buttonText}>{loading ? "Registering..." : "REGISTER"}</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Last Name"
+                value={lastName}
+                onChangeText={setLastName}
+            />    
+
+            <Pressable style={styles.button} onPress={handleRegister}>
+                <Text style={styles.buttonText}>Sign Up</Text>
+            </Pressable>
+
+            <Pressable onPress={() => router.replace("/Login")}>
+                <Text style={styles.link}>Already have an account? Log in</Text>
+            </Pressable>
+
+            <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={() => router.push("/")}>
+                <Text style={styles.buttonText}>BACK</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/")}>
-                <Text style={appStyles.buttonText}>BACK</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/Login")}>
-                <Text style={appStyles.buttonText}>LOG IN</Text>
-            </TouchableOpacity>
+        
+            {/* modal for password or field errors */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                    <Text style={styles.modalText}>{modalMessage}</Text>
+                    <Pressable
+                        style={styles.modalButton}
+                        onPress={() => setModalVisible(false)}
+                    >
+                        <Text style={styles.buttonText}>OK</Text>
+                    </Pressable>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
