@@ -34,9 +34,9 @@ export default function PastTierList() {
         setUserEmail(email);
         setUserId(id);
         
-        console.log("📱 User info from AsyncStorage:", { email, id });
+        console.log("User info from AsyncStorage:", { email, id });
       } catch (err) {
-        console.error("❌ Error retrieving user info:", err);
+        console.error("Error retrieving user info:", err);
       }
     };
     
@@ -48,7 +48,7 @@ export default function PastTierList() {
     const fetchTierLists = async () => {
       // Only proceed if we have a userId or userEmail
       if (!userId && !userEmail) {
-        console.log("⏳ Waiting for user info...");
+        console.log("Waiting for user info...");
         return;
       }
       
@@ -66,59 +66,59 @@ export default function PastTierList() {
               if (data.userId) {
                 effectiveUserId = String(data.userId);
                 setUserId(effectiveUserId);
-                console.log("✅ Retrieved userId:", effectiveUserId);
+                console.log("Retrieved userId:", effectiveUserId);
                 // Store it for future use
                 await AsyncStorage.setItem("userId", effectiveUserId);
               }
             }
           } catch (error) {
-            console.error("❌ Error fetching userId from email:", error);
+            console.error("Error fetching userId from email:", error);
           }
         }
 
         if (!effectiveUserId) {
-          console.error("❌ Still no user ID available");
+          console.error("Still no user ID available");
           setLoading(false);
           setTierLists([]);
           return;
         }
         
-        console.log(`🔍 Fetching tier lists for user ID: ${effectiveUserId}`);
+        console.log(`Fetching tier lists for user ID: ${effectiveUserId}`);
         
         // IMPORTANT: Using the tierlists/user/{userId} endpoint instead of user-tier-lists
         // This endpoint specifically returns tier lists created by the user
         const response = await fetch(`${API_BASE_URL}/tierlists/user/${effectiveUserId}/with-rankings`);
         
-        console.log("📡 Response status:", response.status);
+        console.log("Response status:", response.status);
         
         if (!response.ok) {
-          console.error(`❌ API Error: ${response.status}`);
+          console.error(`API Error: ${response.status}`);
           setTierLists([]);
           setLoading(false);
           return;
         }
         
         const result = await response.json();
-        console.log("📊 API Response:", result);
+        console.log("API Response:", result);
         
         // Make sure we're accessing the correct property from the response
         if (result.tierLists) {
-          console.log(`✅ Found ${result.tierLists.length} tier lists`);
+          console.log(`Found ${result.tierLists.length} tier lists`);
           setTierLists(result.tierLists);
         } else {
-          console.log("⚠️ No tierLists property in response, checking for other formats");
+          console.log("No tierLists property in response, checking for other formats");
           
           // Alternative response format handling
           if (Array.isArray(result)) {
-            console.log(`✅ Found ${result.length} tier lists (array format)`);
+            console.log(`Found ${result.length} tier lists (array format)`);
             setTierLists(result);
           } else {
-            console.log("❌ Unexpected response format:", result);
+            console.log("Unexpected response format:", result);
             setTierLists([]);
           }
         }
       } catch (error) {
-        console.error("❌ Error fetching tier lists:", error);
+        console.error("Error fetching tier lists:", error);
         setTierLists([]);
       } finally {
         setLoading(false);
