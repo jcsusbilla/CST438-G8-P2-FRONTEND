@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+// File: TierList/app/Login.tsx
+// @ts-nocheck
+
+import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import { Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
+import { Text, View, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
 import appStyles from "./styles/appStyles.js";
-import { loginUser } from "@/api/userApi";
+import { AuthService } from "@/api/apiService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
@@ -19,8 +22,12 @@ export default function LoginScreen() {
     
         try {
             setLoading(true);
-            const response = await loginUser(email, password);
+            console.log("Starting login process for email:", email);
+            
+            const response = await AuthService.login(email, password);
+            console.log("Login response received:", response);
             if (response && response.message === "Login successful") {
+                // Success - store email and redirect
                 await AsyncStorage.setItem("userEmail", email);
                 //jc
                 if (response.userId) {
@@ -29,10 +36,13 @@ export default function LoginScreen() {
                 }
                 router.replace(`/Landing?email=${email}`);
             } else {
-                Alert.alert("Login Failed", response.message || "Unexpected error.");
+                // Unexpected success response
+                Alert.alert("Login Issue", "Received unexpected response from server");
             }
-        } catch (err) {
-            Alert.alert("Login Failed", "An error occurred. Please try again.");
+        } catch (error) {
+            console.error("Login error:", error);
+            // Show error from API service
+            Alert.alert("Login Failed", error.message || "An unknown error occurred");
         } finally {
             setLoading(false);
         }
@@ -47,6 +57,8 @@ export default function LoginScreen() {
                 placeholder="Enter email"
                 value={email}
                 onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
             />
             <TextInput
                 style={appStyles.input}
@@ -56,11 +68,23 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
             />
 
-            <TouchableOpacity style={appStyles.button} onPress={handleLogin} disabled={loading}>
-                <Text style={appStyles.buttonText}>{loading ? "LOGGING IN..." : "LOG IN"}</Text>
+            <TouchableOpacity 
+                style={appStyles.button} 
+                onPress={handleLogin} 
+                disabled={loading}
+            >
+                {loading ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                    <Text style={appStyles.buttonText}>LOG IN</Text>
+                )}
             </TouchableOpacity>
 
-            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/")}>
+            <TouchableOpacity 
+                style={[appStyles.button, appStyles.secondaryButton]} 
+                onPress={() => router.push("/")}
+                disabled={loading}
+            >
                 <Text style={appStyles.buttonText}>BACK</Text>
             </TouchableOpacity>
         </View>
