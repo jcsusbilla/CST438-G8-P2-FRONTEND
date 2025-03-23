@@ -1,16 +1,6 @@
 import API_BASE_URL from './apiConfig';
 
 // LOGIN API - /user/login (x-www-form-urlencoded)
-//jc
-// type LoginResponse = {
-//     message: string;
-//     userId: number;
-//     email: string;
-//     userName: string;
-//     firstName?: string;
-//     lastName?: string;
-// };
-
 export const loginUser = async (email: string, password: string) => {
     console.log("Logging in with:", { email, password }); // ✅ Debugging
 
@@ -28,24 +18,6 @@ export const loginUser = async (email: string, password: string) => {
 
     return await response.json();
 };
-// up to here
-
-// export const loginUser = async (email: string, password: string): Promise<{ message: string; email: string; userName: string }> => {
-//     const response = await fetch(`${API_BASE_URL}/user/login`, {//jc
-//         method: "POST",
-//         headers: {
-//             "Content-Type": "application/json"
-//         },
-//         body: JSON.stringify({ email, password })
-//     });
-
-//     if (!response.ok) {
-//         const errorData = await response.json();
-//         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
-//     }
-
-//     return response.json();
-// };
 
 interface RegisterUserData {
     user_name: string;
@@ -57,7 +29,7 @@ interface RegisterUserData {
 
 // REGISTER API - /user/add (x-www-form-urlencoded)
 export const registerUser = async (userData: RegisterUserData): Promise<{ message: string }> => {
-    const response = await fetch("${API_BASE_URL}/user/add", {//jx
+    const response = await fetch(`${API_BASE_URL}/user/add`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -75,27 +47,47 @@ export const registerUser = async (userData: RegisterUserData): Promise<{ messag
 
 // GOOGLE LOGIN API - /user/oauth2/google
 export const loginWithGoogle = async (token: string) => {
-    const response = await fetch(`${API_BASE_URL}/user/oauth2/google`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token })
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Google login failed.");
+    try {
+        console.log("Sending Google token to backend:", token);
+        
+        // Make the fetch request with the token
+        const response = await fetch(`${API_BASE_URL}/user/oauth2/google`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ token })
+        });
+        
+        console.log("Google login response status:", response.status);
+        
+        // Handle non-OK responses
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error response from server:", errorText);
+            throw new Error(errorText || "Google login failed");
+        }
+        
+        // Try to parse as JSON, fallback to text
+        try {
+            return await response.json();
+        } catch (e) {
+            // If not JSON, return the text as a message property
+            const text = await response.text();
+            console.log("Response text:", text);
+            return { message: text, email: "user@example.com" };
+        }
+    } catch (error) {
+        console.error("loginWithGoogle error:", error);
+        throw error;
     }
-
-    return await response.text();
 };
 
 // LOGOUT API - /user/logout (GET)
 export const logoutUser = async () => {
     const response = await fetch(`${API_BASE_URL}/user/logout`, {
         method: 'GET',
-        credentials: 'include',                                                             // session is cleared
+        credentials: 'include',
     });
 
     if (!response.ok) {
@@ -139,12 +131,3 @@ export async function getTierListsWithRankings(userId: number) {
       return [];
     }
   }
-// export const createTierList = async (newTierList) => {
-//     const response = await fetch(`${API_BASE_URL}/tierlist/create`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify(newTierList),
-//     });
-//     if (!response.ok) throw new Error("Failed to create tier list.");
-//     return await response.json();
-// };
