@@ -51,7 +51,7 @@ export default function PastTierList() {
         ))}
       </ScrollView>
 
-      {/* ✅ Modal for Rankings */}
+      {/* modal for rankings */}
       <Modal
         visible={modalVisible}
         animationType="slide"

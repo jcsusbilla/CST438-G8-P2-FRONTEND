@@ -10,7 +10,7 @@ export default function TierListScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams(); // fetch the tier list ID if available
     const [userId, setUserId] = useState<number | null>(null); // save logged-in user's ID
-    const [tierListTitle, setTierListTitle] = useState("Enter Tier List Title");
+    const [tierListTitle, setTierListTitle] = useState("");
 
     const subjectOptions = ["Games", "Movies", "Food", "Music", "Anime"];
     const [subject, setSubject] = useState("");
@@ -163,6 +163,14 @@ export default function TierListScreen() {
       return (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.cardLarge}>
+
+            <TextInput
+                style={styles.titleInput}
+                value={tierListTitle}
+                onChangeText={setTierListTitle}
+                placeholder="Enter Tier List Title"
+            />
+    
             <Text style={styles.label}>Select Subject:</Text>
                 <select
                 value={subject}
@@ -175,14 +183,7 @@ export default function TierListScreen() {
                     </option>
                 ))}
                 </select>
-            <TextInput
-              style={styles.titleInput}
-              placeholder="Enter Tier List Title"
-              value={tierListTitle}
-              onChangeText={setTierListTitle}
-    
-            />
-    
+            
             {Object.entries(activeTierList).map(([tier, items]) => (
               <View key={tier} style={styles.tierContainerLarge}>
                 <Text style={styles.bold}>{tier}:</Text>
@@ -222,6 +223,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
+        width: 50,
         backgroundColor: "#f5f5f5",
     },
     cardLarge: {
