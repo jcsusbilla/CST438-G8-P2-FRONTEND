@@ -96,6 +96,81 @@ const appStyles = StyleSheet.create({
   secondaryButton: {
     backgroundColor: "#444",
   },
+  heading: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 30,
+    color: "#333",
+    textAlign: "center",
+  },
+  infoText: {
+    fontSize: 18,
+    marginBottom: 20,
+    color: "#444",
+    textAlign: "center",
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+  // button: {
+  //   backgroundColor: "#4A90E2",
+  //   padding: 12,
+  //   borderRadius: 8,
+  //   marginBottom: 15,
+  //   alignItems: "center",
+  // },
+  dangerButton: {
+    backgroundColor: "#E94F37",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    marginTop: 10,
+    marginBottom: 20,
+    borderRadius: 6,
+    backgroundColor: "#fff",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+  },
+  modalCard: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  cancelText: {
+    color: "#777",
+    marginTop: 10,
+    fontSize: 16,
+  },
+  greyButton: {
+    backgroundColor: "#ccc",
+  },
+  greyButtonText: {
+    color: "#333",
+    fontSize: 16,
+    fontWeight: "600",
+  },
 });
 
 export default appStyles;

@@ -4,49 +4,37 @@ import { Text, View, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { logoutUser, fetchUserDetails } from "@/api/userApi";
 import appStyles from "./styles/appStyles.js";
+import { useFocusEffect } from "@react-navigation/native";
+import { getUserById } from "@/api/userApi";
+
 
 export default function LandingScreen() {
     const router = useRouter();
     const { email } = useLocalSearchParams();
     const [user, setUser] = useState<{ username: string, firstName: string, lastName: string } | null>(null);
     const [emailStr, setEmailStr] = useState("");
-    
 
-    useEffect(() => {
-        const loadEmail = async () => {
-            try {
-                const storedEmail = email ? email.toString() : await AsyncStorage.getItem("userEmail");
-                console.log("Loaded email from storage:", storedEmail);
-    
-                if (storedEmail) {
-                    setEmailStr(storedEmail);
-                    getUserData(storedEmail);
-                } else {
-                    console.log("No email found, redirecting to login.");
-                    router.replace("/Login");
-                }
-            } catch (err) {
-                console.error("Error loading email:", err);
-                router.replace("/Login");
-            }
-        };
-    
-        loadEmail();
-    }, []);
-
-    //jc
-    useEffect(() => {
-        const fetchUserId = async () => {
+      // re-fetch user data every time screen is focused
+      useFocusEffect(
+        React.useCallback(() => {
+          const loadUser = async () => {
             const storedUserId = await AsyncStorage.getItem("userId");
-            console.log("🔍 Retrieved `userId` from AsyncStorage:", storedUserId);
-            if (!storedUserId) {
-                console.warn("`userId` is missing in AsyncStorage!");
+            if (storedUserId) {
+              const response = await getUserById(Number(storedUserId));
+              if (response?.username) {
+                setUser({
+                  username: response.username,
+                  firstName: response.firstName,
+                  lastName: response.lastName,
+                });
+              }
             }
-        };
-        fetchUserId();
-    }, []);
+          };
+          loadUser();
+        }, [])
+      );
 
-    // Fetch user details
+    // fetch user details
     const getUserData = async (emailToFetch: string) => {
         try {
             console.log("Fetching user data for:", emailToFetch);
@@ -63,7 +51,7 @@ export default function LandingScreen() {
         <View style={appStyles.container}>
             {user ? (
                 <Text style={appStyles.title}>
-                    Hello, {user.firstName} {user.lastName}  {/* ✅ FIXED */}
+                    Hello, {user.username}
                 </Text>
             ) : (
                 <Text>Loading user details...</Text>
@@ -82,9 +70,9 @@ export default function LandingScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-                style={appStyles.button}
+                style={[appStyles.button, appStyles.secondaryButton]}
                 onPress={async () => {
-                    await AsyncStorage.removeItem("userEmail"); // Clear user data
+                    await AsyncStorage.removeItem("userEmail");
                     router.replace("/Login");
                 }}
             >
