@@ -19,17 +19,21 @@ export default function LoginScreen() {
             Alert.alert("Error", "Please fill in both fields.");
             return;
         }
-
+    
         try {
             setLoading(true);
             console.log("Starting login process for email:", email);
             
             const response = await AuthService.login(email, password);
             console.log("Login response received:", response);
-            
             if (response && response.message === "Login successful") {
                 // Success - store email and redirect
                 await AsyncStorage.setItem("userEmail", email);
+                //jc
+                if (response.userId) {
+                    await AsyncStorage.setItem("userId", String(response.userId));
+                    console.log("✅ Stored userId:", response.userId);
+                }
                 router.replace(`/Landing?email=${email}`);
             } else {
                 // Unexpected success response

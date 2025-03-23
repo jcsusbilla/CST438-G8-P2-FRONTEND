@@ -14,6 +14,37 @@ export default function SignUpScreen() {
     const [lastName, setLastName] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // const handleSignUp = async () => {
+    //     if (!email || !password || !firstName || !lastName) {
+    //         Alert.alert("Error", "Please fill in all fields.");
+    //         return;
+    //     }
+    
+    //     try {
+    //         setLoading(true);
+    //         const response = await signUpUser(email, password, firstName, lastName);
+    
+    //         if (response && response.message === "Sign up successful") {
+    //             console.log("✅ User Data from API:", response);
+    
+    //             // ✅ Store user details in AsyncStorage
+    //             await AsyncStorage.setItem("userId", String(response.userId));
+    //             await AsyncStorage.setItem("userEmail", response.email);
+    //             await AsyncStorage.setItem("userName", response.userName);
+    //             await AsyncStorage.setItem("firstName", response.firstName);
+    //             await AsyncStorage.setItem("lastName", response.lastName);
+    
+    //             router.replace(`/Landing`);
+    //         } else {
+    //             Alert.alert("Sign Up Failed", response.message || "Unexpected error.");
+    //         }
+    //     } catch (err) {
+    //         Alert.alert("Sign Up Failed", "An error occurred. Please try again.");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
     const handleRegister = async () => {
         if (!username || !email || !password) {
             Alert.alert("Error", "Please fill in all required fields.");
