@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  Modal,
-  TouchableOpacity,
-  Pressable,
-  ActivityIndicator,
+import {  View, Text, ScrollView, StyleSheet, Modal, TouchableOpacity, Pressable,  ActivityIndicator,
   Alert
 } from "react-native";
+import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_BASE_URL from "@/api/apiConfig";
 import { useRouter } from "expo-router";
+import appStyles from "./styles/appStyles.js";
 
 export default function PastTierList() {
   const router = useRouter();
@@ -249,6 +243,9 @@ export default function PastTierList() {
           </View>
         </View>
       </Modal>
+      <TouchableOpacity style={[styles.button, appStyles.secondaryButton]} onPress={() => router.push("/Landing")}>
+        <Text style={appStyles.buttonText}>BACK</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -349,6 +346,13 @@ const styles = StyleSheet.create({
     color: "#e53935",
     textAlign: "center",
     marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#007BFF",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
   },
   modalOverlay: {
     flex: 1,

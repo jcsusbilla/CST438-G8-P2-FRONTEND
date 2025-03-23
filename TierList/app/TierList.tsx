@@ -3,24 +3,23 @@ import { Text, View, TextInput, TouchableOpacity, Button, StyleSheet, Alert, Scr
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import API_BASE_URL from "@/api/apiConfig";
+import appStyles from "./styles/appStyles.js";
+
 
 export default function TierListScreen() {
     const router = useRouter();
-    const { id } = useLocalSearchParams(); // Fetch the Tier List ID if available
-    const [userId, setUserId] = useState<number | null>(null); // Save logged-in user's ID
+    const { id } = useLocalSearchParams(); // fetch the tier list ID if available
+    const [userId, setUserId] = useState<number | null>(null); // save logged-in user's ID
     const [tierListTitle, setTierListTitle] = useState("Enter Tier List Title");
 
     const subjectOptions = ["Games", "Movies", "Food", "Music", "Anime"];
-    const [subject, setSubject] = useState(""); // default
+    const [subject, setSubject] = useState("");
 
     // define allowed tier values
     type TierType = "S" | "A" | "B" | "C" | "D" | "F";
     type TierListState = Record<TierType, string[]>;
 
-    // const [activeTierList, setActiveTierList] = useState<TierListState>({
-    //     S: [], A: [], B: [], C: [], D: [], F: []
-    // });
-    // ✅ Tier content
+    // Tier content
     const [activeTierList, setActiveTierList] = useState<TierListState>({
         S: [],
         A: [],
@@ -30,7 +29,6 @@ export default function TierListScreen() {
         F: [],
     });
 
-    // ✅ Input field for each tier
     const [inputText, setInputText] = useState<Record<TierType, string>>({
         S: "",
         A: "",
@@ -38,13 +36,13 @@ export default function TierListScreen() {
         C: "",
         D: "",
         F: "",
-    }); // ✅ ADDED
+    });
 
-    // Fetch logged-in user's ID
+    // fetch logged-in user's ID
     useEffect(() => {
         const fetchUserId = async () => {
             try {
-                const storedEmail = await AsyncStorage.getItem("userEmail"); // Assuming email is stored
+                const storedEmail = await AsyncStorage.getItem("userEmail");
                 if (!storedEmail) {
                     console.warn("⚠️ No email found in storage");
                     return;
@@ -68,7 +66,7 @@ export default function TierListScreen() {
         fetchUserId();
     }, []);
 
-    // Fetch existing TierList data (for editing)
+    // fetch existing TierList data (for editing)
     useEffect(() => {
         if (!id) return;
 
@@ -82,12 +80,12 @@ export default function TierListScreen() {
 
                 setTierListTitle(data.title);
 
-                // Ensure `formattedRankings` has correct type
+                // ensure `formattedRankings` has correct type
                 const formattedRankings: TierListState = { S: [], A: [], B: [], C: [], D: [], F: [] };
 
                 data.rankings.forEach((ranking: { tier: string; item: string }) => {
-                    const tier = ranking.tier as TierType; // Explicitly cast as `TierType`
-                    if (formattedRankings[tier]) { // Ensure tier exists
+                    const tier = ranking.tier as TierType;
+                    if (formattedRankings[tier]) {
                         formattedRankings[tier] = [...formattedRankings[tier], ranking.item];
                     }
                 });
@@ -111,7 +109,7 @@ export default function TierListScreen() {
           }));
           setInputText(prev => ({
             ...prev,
-            [tier]: "" // ✅ Clear input
+            [tier]: ""
           }));
           console.log(`📥 Added "${text.trim()}" to tier ${tier}`);
         }
@@ -179,9 +177,10 @@ export default function TierListScreen() {
                 </select>
             <TextInput
               style={styles.titleInput}
+              placeholder="Enter Tier List Title"
               value={tierListTitle}
               onChangeText={setTierListTitle}
-              placeholder="Enter Tier List Title"
+    
             />
     
             {Object.entries(activeTierList).map(([tier, items]) => (
@@ -211,6 +210,9 @@ export default function TierListScreen() {
           <TouchableOpacity style={styles.button} onPress={handleSaveTierList}>
             <Text style={styles.buttonText}>Save Tier List</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, appStyles.secondaryButton]} onPress={() => router.push("/Landing")}>
+              <Text style={appStyles.buttonText}>BACK</Text>
+          </TouchableOpacity>
         </ScrollView>
       );
     }
@@ -234,7 +236,6 @@ const styles = StyleSheet.create({
     },
     titleInput: {
         fontSize: 24,
-        fontWeight: "bold",
         color: "#333",
         marginBottom: 15,
         borderBottomWidth: 1,

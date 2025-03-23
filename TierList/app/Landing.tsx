@@ -5,6 +5,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { logoutUser, fetchUserDetails } from "@/api/userApi"; // Ensure this is imported
 import appStyles from "./styles/appStyles.js";
 import API_BASE_URL from "@/api/apiConfig";
+import { useFocusEffect } from "@react-navigation/native";
+import { getUserById } from "@/api/userApi";
+
 
 export default function LandingScreen() {
 	const router = useRouter();

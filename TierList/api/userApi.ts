@@ -2,7 +2,7 @@ import API_BASE_URL from './apiConfig';
 
 // LOGIN API - /user/login (x-www-form-urlencoded)
 export const loginUser = async (email: string, password: string) => {
-    console.log("Logging in with:", { email, password }); // ✅ Debugging
+    console.log("Logging in with:", { email, password });
 
     const response = await fetch(`${API_BASE_URL}/user/login`, {
         method: "POST",
@@ -10,7 +10,7 @@ export const loginUser = async (email: string, password: string) => {
         body: JSON.stringify({ email, password }),
     });
 
-    console.log("Server response:", response); // ✅ Debugging
+    console.log("Server response:", response);
 
     if (!response.ok) {
         throw new Error("Login failed");
@@ -130,4 +130,36 @@ export async function getTierListsWithRankings(userId: number) {
       console.error("Failed to fetch tier lists with rankings:", error);
       return [];
     }
+}
+
+export async function getUserById(userId : number) {
+    const res = await fetch(`${API_BASE_URL}/user/${userId}`);
+    return await res.json();
   }
+  
+  export async function updateUsername(userId : number, newUsername : string) {
+    const res = await fetch(`${API_BASE_URL}/user/updateUsername`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, newUsername }),
+    });
+    return await res.json();
+  }
+  
+  export async function updatePassword(userId : number, newPassword : string) {
+    const res = await fetch(`${API_BASE_URL}/user/updatePassword`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, newPassword }),
+    });
+    return await res.json();
+  }
+  
+  export async function deleteUser(userId : number) {
+    const res = await fetch(`${API_BASE_URL}/user/delete/${userId}`, {
+      method: "DELETE",
+    });
+    return await res.text();
+  }
+
+  
