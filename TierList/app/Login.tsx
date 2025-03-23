@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
-import { Text, View, TouchableOpacity, TextInput, Alert, Platform } from "react-native";
+import { Text, View, TouchableOpacity, TextInput, Alert, Platform, ActivityIndicator } from "react-native";
 import * as Google from "expo-auth-session/providers/google"; 
 import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import appStyles from "./styles/appStyles.js";
-import { loginUser } from "@/api/userApi"; 
+import { AuthService } from "@/api/apiService"; 
 
 // Required for Google Auth - registers the browser that will handle OAuth redirects
 WebBrowser.maybeCompleteAuthSession();
@@ -98,9 +98,13 @@ export default function LoginScreen() {
     
         try {
             setLoading(true);
-            const response = await loginUser(email, password);
+            console.log("Starting login process for email:", email);
+            
+            const response = await AuthService.login(email, password);
+            console.log("Login response received:", response);
             
             if (response && response.message === "Login successful") {
+                // Success - store email and redirect
                 await AsyncStorage.setItem("userEmail", email);
                 // Store userId if available
                 if (response.userId) {
@@ -110,10 +114,13 @@ export default function LoginScreen() {
                 // Redirect to the Landing page after successful login
                 router.replace(`/Landing?email=${email}`);
             } else {
-                Alert.alert("Login Failed", response.message || "Unexpected error.");
+                // Unexpected success response
+                Alert.alert("Login Issue", "Received unexpected response from server");
             }
-        } catch (err) {
-            Alert.alert("Login Failed", "An error occurred. Please try again.");
+        } catch (error) {
+            console.error("Login error:", error);
+            // Show error from API service
+            Alert.alert("Login Failed", error.message || "An unknown error occurred");
         } finally {
             setLoading(false);
         }
@@ -128,6 +135,8 @@ export default function LoginScreen() {
                 placeholder="Enter email"
                 value={email}
                 onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
             />
             <TextInput
                 style={appStyles.input}
@@ -137,8 +146,16 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
             />
 
-            <TouchableOpacity style={appStyles.button} onPress={handleLogin} disabled={loading}>
-                <Text style={appStyles.buttonText}>{loading ? "LOGGING IN..." : "LOG IN"}</Text>
+            <TouchableOpacity 
+                style={appStyles.button} 
+                onPress={handleLogin} 
+                disabled={loading}
+            >
+                {loading ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                    <Text style={appStyles.buttonText}>LOG IN</Text>
+                )}
             </TouchableOpacity>
 
             {/* Google Login Button */}
@@ -150,7 +167,20 @@ export default function LoginScreen() {
                 <Text style={appStyles.buttonText}>{loading ? "PROCESSING..." : "LOGIN WITH GOOGLE"}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[appStyles.button, appStyles.secondaryButton]} onPress={() => router.push("/")}>
+            {/* Google Login Button
+            <TouchableOpacity 
+                style={appStyles.button} 
+                onPress={() => request ? promptAsync() : Alert.alert("Error", "Google Login request not initialized.")}
+                disabled={loading}
+            >
+                <Text style={appStyles.buttonText}>{loading ? "PROCESSING..." : "LOGIN WITH GOOGLE"}</Text>
+            </TouchableOpacity> */}
+
+            <TouchableOpacity 
+                style={[appStyles.button, appStyles.secondaryButton]} 
+                onPress={() => router.push("/")}
+                disabled={loading}
+            >
                 <Text style={appStyles.buttonText}>BACK</Text>
             </TouchableOpacity>
         </View>
