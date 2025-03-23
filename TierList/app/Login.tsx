@@ -15,6 +15,8 @@ export default function LoginScreen() {
     // Google OAuth Request
     const [request, response, promptAsync] = Google.useAuthRequest({
         clientId: "653433989841-i9tjusnnltg34encolsimput0t0nndof.apps.googleusercontent.com", 
+       
+        // this is where the window redirects to after authentication. It is required to have a redirect URI
         redirectUri: "https://tier-list-app-2c41fcb37475.herokuapp.com/"  
     });
 
@@ -32,9 +34,11 @@ export default function LoginScreen() {
 
         try {
             setLoading(true);
+            // the problem could be with loginWithGoogle function in userApi.ts
             const message = await loginWithGoogle(token);  
             Alert.alert("Success", message);
-            // Redirect to the Landing page after successful Google login
+
+            // Redirect to the Landing page after successful Google login (This is not happening)
             router.replace("/Landing"); 
         } catch (err: any) {
             Alert.alert("Google Login Failed.", err.message);
