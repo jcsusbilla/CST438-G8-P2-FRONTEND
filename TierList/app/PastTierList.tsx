@@ -354,13 +354,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
   },
-  button: {
-    backgroundColor: "#007BFF",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 20,
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
