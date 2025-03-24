@@ -4,6 +4,9 @@ import { Text, View, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { logoutUser, fetchUserDetails } from "@/api/userApi"; // Ensure this is imported
 import appStyles from "./styles/appStyles.js";
+import { useFocusEffect } from "@react-navigation/native";
+import { getUserById } from "@/api/userApi";
+
 import API_BASE_URL from "@/api/apiConfig";
 import { useFocusEffect } from "@react-navigation/native";
 import { getUserById } from "@/api/userApi";

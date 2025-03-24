@@ -5,7 +5,7 @@ import {  View, Text, ScrollView, StyleSheet, Modal, TouchableOpacity, Pressable
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_BASE_URL from "@/api/apiConfig";
-import { useRouter } from "expo-router";
+
 import appStyles from "./styles/appStyles.js";
 
 export default function PastTierList() {
@@ -193,7 +193,7 @@ export default function PastTierList() {
         <Text style={styles.buttonText}>Back to Dashboard</Text>
       </TouchableOpacity>
 
-      {/* ✅ Modal for Rankings */}
+      {/* modal for rankings */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -346,6 +346,13 @@ const styles = StyleSheet.create({
     color: "#e53935",
     textAlign: "center",
     marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#007BFF",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
   },
   button: {
     backgroundColor: "#007BFF",
