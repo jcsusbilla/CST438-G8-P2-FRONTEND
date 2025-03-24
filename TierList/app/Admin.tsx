@@ -5,7 +5,6 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, FlatList, Modal, TextInput, Alert, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AdminService } from "@/api/apiService";
 import appStyles from "./styles/appStyles.js";
 import axios from "axios";
 import API_BASE_URL from "@/api/apiConfig";
@@ -15,8 +14,9 @@ export default function AdminScreen() {
 	const [users, setUsers] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
-	const [userRole, setUserRole] = useState(null);
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [userEmail, setUserEmail] = useState("");
+	const [userId, setUserId] = useState("");
+	const [userRole, setUserRole] = useState("");
 
 	const [createUserModal, setCreateUserModal] = useState(false);
 	const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
@@ -29,94 +29,77 @@ export default function AdminScreen() {
 	const [newLastName, setNewLastName] = useState("");
 	const [newRole, setNewRole] = useState("USER");
 
+	// First, load user info from storage
 	useEffect(() => {
-		const checkAuthAndFetchUsers = async () => {
+		const loadUserInfo = async () => {
 			try {
-				// First, get the user's email and role from storage
 				const email = await AsyncStorage.getItem("userEmail");
+				const id = await AsyncStorage.getItem("userId");
 				const role = await AsyncStorage.getItem("userRole");
 
-                // Set them in state
-                setUserRole(role);
-                setIsAuthenticated(!!email);
+				console.log("Admin user info:", { email, id, role });
+				
+				setUserEmail(email || "");
+				setUserId(id || "");
+				setUserRole(role || "");
 
-				console.log("Admin authentication check:", { email, role });
-
-				// If not authenticated or not an ADMIN, show an alert and return to Landing
+				// If not an admin, redirect back to landing
 				if (!email || role !== "ADMIN") {
-					console.log("Access denied. Email:", email, "Role:", role);
+					console.log("Not an admin user, redirecting");
 					Alert.alert("Access Denied", "Admin privileges required");
 					router.replace("/Landing");
 					return;
 				}
 
-				// Use direct API request rather than the service
-				try {
-					console.log("Fetching all users...");
-					const response = await axios.get(`${API_BASE_URL}/user/admin/all-users`, {
-						withCredentials: true,
-					});
-
-					console.log("Fetched users:", response.data);
-
-					if (Array.isArray(response.data)) {
-						setUsers(response.data);
-					} else {
-						console.error("Unexpected response format:", response.data);
-						Alert.alert("Error", "Unexpected data format from server");
-						setUsers([]);
-					}
-				} catch (error) {
-					console.error("Error fetching users:", error);
-					Alert.alert(
-						"Authentication Error", 
-						"Failed to authenticate as admin. Please log out and log in again."
-					);
-					router.replace("/Landing");
+				// If we have valid admin user info, fetch users
+				if (email && role === "ADMIN") {
+					fetchUsers();
 				}
 			} catch (error) {
-				console.error("Error:", error);
-				Alert.alert("Error", "Failed to authenticate or load data");
+				console.error("Error loading user info:", error);
+				Alert.alert("Error", "Failed to load user information");
 				router.replace("/Landing");
-			} finally {
-				setLoading(false);
 			}
 		};
 
-		checkAuthAndFetchUsers();
+		loadUserInfo();
 	}, []);
 
+	// Fetch users with direct API call
 	const fetchUsers = async () => {
 		try {
 			setLoading(true);
 			console.log("Fetching all users...");
 			
-			const response = await axios.get(`${API_BASE_URL}/user/admin/all-users`, {
-				withCredentials: true,
+			// Create a simple cookie with user info for authentication
+			document.cookie = `userEmail=${encodeURIComponent(userEmail)}; path=/`;
+			
+			// Make the request with credentials
+			const response = await fetch(`${API_BASE_URL}/user/all`, {
+				method: 'GET',
+				credentials: 'include',
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json',
+				}
 			});
 			
-			console.log("Fetched users:", response.data);
-
-			if (Array.isArray(response.data)) {
-				setUsers(response.data);
-				
-				// Log first few users for debugging
-				if (response.data.length > 0) {
-					console.log("User sample:", response.data.slice(0, 3));
-					
-					// Count active vs inactive users
-					const activeCount = response.data.filter((u) => u.active !== false).length;
-					const inactiveCount = response.data.filter((u) => u.active === false).length;
-					console.log(`User status count: ${activeCount} active, ${inactiveCount} inactive`);
-				}
+			if (!response.ok) {
+				throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+			}
+			
+			const data = await response.json();
+			console.log(`Fetched ${Array.isArray(data) ? data.length : 0} users`);
+			
+			if (Array.isArray(data)) {
+				setUsers(data);
 			} else {
-				console.error("Unexpected response format:", response.data);
-				Alert.alert("Error", "Unexpected data format from server");
+				console.error("Unexpected response format:", data);
 				setUsers([]);
 			}
 		} catch (error) {
 			console.error("Error fetching users:", error);
-			Alert.alert("Error", "Failed to fetch users from server");
+			Alert.alert("Error", `Failed to fetch users: ${error.message}`);
 		} finally {
 			setLoading(false);
 			setRefreshing(false);
@@ -132,33 +115,30 @@ export default function AdminScreen() {
 		try {
 			setLoading(true);
 
+			// Create form data object
 			const formData = new FormData();
-			formData.append("username", newUsername);
+			formData.append("user_name", newUsername);
 			formData.append("email", newEmail);
 			formData.append("password", newPassword);
-			formData.append("role", newRole);
+			formData.append("first_name", newFirstName || "");
+			formData.append("last_name", newLastName || "");
 
-			if (newFirstName) formData.append("first_name", newFirstName);
-			if (newLastName) formData.append("last_name", newLastName);
+			console.log("Creating new user:", newUsername);
 
-			console.log("Creating new user with form data:", formData);
-
-			const response = await axios({
-				method: "post",
-				url: `${API_BASE_URL}/user/admin/create-user`,
-				data: formData,
-				headers: {
-					"Content-Type": "multipart/form-data",
-				},
-				withCredentials: true,
+			// Use regular fetch with credentials
+			const response = await fetch(`${API_BASE_URL}/user/register`, {
+				method: 'POST',
+				credentials: 'include',
+				body: formData
 			});
 
-			console.log("Create user response:", response.data);
+			const responseText = await response.text();
+			console.log("📝 Create user response:", responseText);
 
-			if (response.data.includes("successfully")) {
+			if (response.ok) {
 				Alert.alert("Success", "User created successfully");
 
-				// Clear the form and close modal
+				// Clear form and close modal
 				setNewUsername("");
 				setNewEmail("");
 				setNewPassword("");
@@ -170,11 +150,11 @@ export default function AdminScreen() {
 				// Refresh user list
 				fetchUsers();
 			} else {
-				Alert.alert("Error", response.data || "Failed to create user");
+				Alert.alert("Error", responseText || "Failed to create user");
 			}
 		} catch (error) {
 			console.error("Error creating user:", error);
-			Alert.alert("Error", `Failed to create user: ${error.response?.data || error.message || "Unknown error"}`);
+			Alert.alert("Error", `Failed to create user: ${error.message}`);
 		} finally {
 			setLoading(false);
 		}
@@ -183,22 +163,26 @@ export default function AdminScreen() {
 	const handleUpdateUserRole = async (userId, newRole) => {
 		try {
 			setLoading(true);
-			console.log(`Updating user ${userId} to role ${newRole}`);
+			console.log(`🔄 Updating user ${userId} to role ${newRole}`);
 			
-			const response = await axios({
-				method: "patch",
-				url: `${API_BASE_URL}/user/admin/update-role/${userId}`,
-				params: { newRole },
-				withCredentials: true,
+			// Use fetch with credentials
+			const response = await fetch(`${API_BASE_URL}/user/admin/update-role/${userId}?newRole=${newRole}`, {
+				method: 'PATCH',
+				credentials: 'include',
 			});
 			
-			console.log("Update role response:", response.data);
+			const responseText = await response.text();
+			console.log("🔄 Update role response:", responseText);
 			
-			Alert.alert("Success", "User role updated successfully");
-			fetchUsers();
+			if (response.ok) {
+				Alert.alert("Success", "User role updated successfully");
+				fetchUsers();
+			} else {
+				Alert.alert("Error", responseText || "Failed to update user role");
+			}
 		} catch (error) {
 			console.error("Error updating user role:", error);
-			Alert.alert("Error", "Failed to update user role. Check console for details.");
+			Alert.alert("Error", `Failed to update user role: ${error.message}`);
 		} finally {
 			setLoading(false);
 		}
@@ -211,25 +195,27 @@ export default function AdminScreen() {
 			const userToUpdate = users.find((u) => u.id === userId);
 			const currentStatus = userToUpdate?.active === false ? "inactive" : "active";
 			console.log(`Toggling user ${userId} from ${currentStatus} status`);
-			console.log("User object:", userToUpdate);
 
-			// Direct API call to the backend
-			const response = await axios({
-				method: "patch",
-				url: `${API_BASE_URL}/user/admin/disable-user/${userId}`,
-				withCredentials: true,
+			// Use fetch with credentials
+			const response = await fetch(`${API_BASE_URL}/user/admin/disable-user/${userId}`, {
+				method: 'PATCH',
+				credentials: 'include',
 			});
 			
-			console.log("Disable user response:", response.data);
-
-			Alert.alert("Success", `User status updated: ${currentStatus === "active" ? "disabled" : "enabled"}`);
-
-			setTimeout(() => {
-				fetchUsers();
-			}, 300);
+			const responseText = await response.text();
+			console.log("🔄 Disable user response:", responseText);
+			
+			if (response.ok) {
+				Alert.alert("Success", `User status updated: ${currentStatus === "active" ? "disabled" : "enabled"}`);
+				setTimeout(() => {
+					fetchUsers();
+				}, 300);
+			} else {
+				Alert.alert("Error", responseText || "Failed to update user status");
+			}
 		} catch (error) {
 			console.error("Error toggling user status:", error);
-			Alert.alert("Error", `Failed to update user status: ${error.message || "Unknown error"}`);
+			Alert.alert("Error", `Failed to update user status: ${error.message}`);
 		} finally {
 			setLoading(false);
 		}
@@ -245,23 +231,28 @@ export default function AdminScreen() {
 
 		try {
 			setLoading(true);
-			console.log(`Deleting user ${selectedUser.id}`);
+			console.log(`🗑️ Deleting user ${selectedUser.id}`);
 			
-			const response = await axios({
-				method: "delete",
-				url: `${API_BASE_URL}/user/admin/delete-user/${selectedUser.id}`,
-				withCredentials: true,
+			// Use fetch with credentials
+			const response = await fetch(`${API_BASE_URL}/user/admin/delete-user/${selectedUser.id}`, {
+				method: 'DELETE',
+				credentials: 'include',
 			});
 			
-			console.log("Delete user response:", response.data);
+			const responseText = await response.text();
+			console.log("🗑️ Delete user response:", responseText);
 			
-			Alert.alert("Success", "User deleted successfully");
-			setConfirmDeleteModal(false);
-			setSelectedUser(null);
-			fetchUsers();
+			if (response.ok) {
+				Alert.alert("Success", "User deleted successfully");
+				setConfirmDeleteModal(false);
+				setSelectedUser(null);
+				fetchUsers();
+			} else {
+				Alert.alert("Error", responseText || "Failed to delete user");
+			}
 		} catch (error) {
 			console.error("Error deleting user:", error);
-			Alert.alert("Error", error.message || "Failed to delete user");
+			Alert.alert("Error", `Failed to delete user: ${error.message}`);
 		} finally {
 			setLoading(false);
 		}
