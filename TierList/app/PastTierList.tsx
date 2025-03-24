@@ -250,9 +250,7 @@ export default function PastTierList() {
           </View>
         </View>
       </Modal>
-      <TouchableOpacity style={[styles.button, appStyles.secondaryButton]} onPress={() => router.push("/Landing")}>
-        <Text style={appStyles.buttonText}>BACK</Text>
-      </TouchableOpacity>
+    
     </View>
   );
 }
