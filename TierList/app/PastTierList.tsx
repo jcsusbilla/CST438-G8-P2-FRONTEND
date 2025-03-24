@@ -58,7 +58,7 @@ export default function PastTierList() {
         // If we don't have a userId yet but we have an email, try to get the userId
         let effectiveUserId = userId;
         if (!effectiveUserId && userEmail) {
-          console.log("🔍 Attempting to fetch userId using email:", userEmail);
+          console.log("Attempting to fetch userId using email:", userEmail);
           try {
             const response = await fetch(`${API_BASE_URL}/user/getUserId?email=${encodeURIComponent(userEmail)}`);
             if (response.ok) {
@@ -129,7 +129,7 @@ export default function PastTierList() {
   }, [userId, userEmail]);
 
   const openModal = (list: any) => {
-    console.log("🔍 Opening modal for list:", list);
+    console.log("Opening modal for list:", list);
     setSelectedList(list);
     setModalVisible(true);
   };

@@ -38,17 +38,16 @@ export default function LoginScreen() {
         }
     }, [response]);
 
-
     const registerGoogleUser = async (googleEmail, firstName, lastName) => {
         try {
             console.log("Registering new Google user:", { googleEmail, firstName, lastName });
-            
-            const username = googleEmail.split('@')[0];
             
             const response = await axios.post(`${API_BASE_URL}/user/register-google-user`, {
                 email: googleEmail,
                 firstName: firstName || "",
                 lastName: lastName || "",
+            }, {
+                withCredentials: true // Important: Send cookies with the request
             });
             
             console.log("Registration response:", response.data);
@@ -57,6 +56,13 @@ export default function LoginScreen() {
                 const newUserId = String(response.data.userId);
                 console.log("New user registered with ID:", newUserId);
                 await AsyncStorage.setItem("userId", newUserId);
+                
+                // Store essential session data
+                await AsyncStorage.setItem("userEmail", googleEmail);
+                if (response.data.role) {
+                    await AsyncStorage.setItem("userRole", response.data.role);
+                }
+                
                 return newUserId;
             } else {
                 console.warn("Registration did not return a user ID");
@@ -80,7 +86,6 @@ export default function LoginScreen() {
             setLoading(true);
             console.log("Auth response received:", authResponse);
     
-
             const { authentication } = authResponse;
             
             if (!authentication || !authentication.accessToken) {
@@ -107,52 +112,52 @@ export default function LoginScreen() {
             const [firstName, ...lastNameParts] = googleName.split(' ');
             const lastName = lastNameParts.join(' ');
             
-            await AsyncStorage.setItem("userEmail", googleEmail);
-            
-            await AsyncStorage.removeItem("userId");
-            
             try {
-                console.log("Checking if Google user exists:", googleEmail);
-                const userIdResponse = await fetch(`${API_BASE_URL}/user/getUserId?email=${encodeURIComponent(googleEmail)}`);
+                const response = await fetch(`${API_BASE_URL}/user/register-google-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: googleEmail,
+                        firstName: firstName || '',
+                        lastName: lastName || ''
+                    }),
+                    credentials: 'include' // Important: include cookies
+                });
                 
-                let userId = null;
-                
-                if (userIdResponse.ok) {
-                    const userIdData = await userIdResponse.json();
-                    
-                    if (userIdData && userIdData.userId) {
-                        userId = String(userIdData.userId);
-                        console.log("Existing user found with ID:", userId);
-                        await AsyncStorage.setItem("userId", userId);
-                    } else {
-                        console.log("User doesn't exist, registering new account");
-                        // User doesn't exist, register them
-                        userId = await registerGoogleUser(googleEmail, firstName, lastName);
-                    }
-                } else {
-                    console.log("User doesn't exist or error occurred, registering new account");
-                    // User doesn't exist or there was an error, try registering them
-                    userId = await registerGoogleUser(googleEmail, firstName, lastName);
+                if (!response.ok) {
+                    throw new Error("Failed to register Google user with backend");
                 }
                 
-                if (!userId) {
-                    console.error("Failed to get or create a user ID for Google login");
-                    Alert.alert("Login Error", "Failed to retrieve or create user account");
-                    setLoading(false);
-                    return;
+                const result = await response.json();
+                console.log("Backend Google user registration response:", result);
+                
+                // Store essential data in AsyncStorage
+                await AsyncStorage.setItem("userEmail", googleEmail);
+                
+                if (result.userId) {
+                    await AsyncStorage.setItem("userId", String(result.userId));
                 }
+                
+                if (result.role) {
+                    await AsyncStorage.setItem("userRole", result.role);
+                }
+                
+                // Now make a request to verify session is active
+                await fetch(`${API_BASE_URL}/user/details?email=${encodeURIComponent(googleEmail)}`, {
+                    credentials: 'include'
+                });
+                
+                // Navigate to landing page
+                router.replace({
+                    pathname: "/Landing",
+                    params: { email: googleEmail }
+                });
             } catch (error) {
                 console.error("Error processing Google login:", error);
-                Alert.alert("Login Error", "An error occurred during Google login");
-                setLoading(false);
-                return;
+                Alert.alert("Login Error", error.message || "Failed to process Google login");
             }
-            
-            console.log("Redirecting to Landing with Google data");
-            router.push({
-                pathname: "/Landing",
-                params: { email: googleEmail }
-            });
         } catch (err) {
             console.error("Google login error:", err);
             Alert.alert("Google Login Failed", err.message || "An unexpected error occurred");
