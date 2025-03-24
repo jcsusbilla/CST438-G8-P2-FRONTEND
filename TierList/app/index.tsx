@@ -11,12 +11,11 @@ export default function WelcomeScreen() {
       <Text style={styles.subtitle}>Create and share tier lists.</Text>
       
       <View style={styles.buttonContainer}>
-        {/* Navigate to Login */}
+
         <TouchableOpacity style={styles.button} onPress={() => router.push("/Login")}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
         
-        {/* Navigate to Sign Up */}
         <TouchableOpacity style={[styles.button, styles.signupButton]} onPress={() => router.push("/SignUp")}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>

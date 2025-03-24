@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import API_BASE_URL from "@/api/apiConfig";
+import appStyles from "./styles/appStyles.js";
 import { useRouter } from "expo-router";
 
 export default function PastTierList() {
@@ -249,6 +250,9 @@ export default function PastTierList() {
           </View>
         </View>
       </Modal>
+      <TouchableOpacity style={[styles.button, appStyles.secondaryButton]} onPress={() => router.push("/Landing")}>
+        <Text style={appStyles.buttonText}>BACK</Text>
+      </TouchableOpacity>
     </View>
   );
 }
