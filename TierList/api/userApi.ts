@@ -28,8 +28,14 @@ interface RegisterUserData {
 }
 
 // REGISTER API - /user/add (x-www-form-urlencoded)
-export const registerUser = async (userData: RegisterUserData): Promise<{ message: string }> => {
-    const response = await fetch("${API_BASE_URL}/user/add", {//jx
+export const registerUser = async (
+    user_name: string,
+    email: string,
+    password: string,
+    first_name?: string,
+    last_name?: string
+): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/user/register`, {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded", // Java expects this for @RequestParam
@@ -52,47 +58,26 @@ export const registerUser = async (userData: RegisterUserData): Promise<{ messag
 
 // GOOGLE LOGIN API - /user/oauth2/google
 export const loginWithGoogle = async (token: string) => {
-    try {
-        console.log("Sending Google token to backend:", token);
-        
-        // Make the fetch request with the token
-        const response = await fetch(`${API_BASE_URL}/user/oauth2/google`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ token })
-        });
-        
-        console.log("Google login response status:", response.status);
-        
-        // Handle non-OK responses
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Error response from server:", errorText);
-            throw new Error(errorText || "Google login failed");
-        }
-        
-        // Try to parse as JSON, fallback to text
-        try {
-            return await response.json();
-        } catch (e) {
-            // If not JSON, return the text as a message property
-            const text = await response.text();
-            console.log("Response text:", text);
-            return { message: text, email: "user@example.com" };
-        }
-    } catch (error) {
-        console.error("loginWithGoogle error:", error);
-        throw error;
+    const response = await fetch(`${API_BASE_URL}/user/oauth2/google`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token })
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Google login failed.");
     }
+    return await response.text();
 };
 
 // LOGOUT API - /user/logout (GET)
 export const logoutUser = async () => {
     const response = await fetch(`${API_BASE_URL}/user/logout`, {
         method: 'GET',
-        credentials: 'include',
+        credentials: 'include',                                                             // session is cleared
     });
 
     if (!response.ok) {
